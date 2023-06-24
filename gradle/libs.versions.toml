@@ -8,7 +8,7 @@ androidx-junit = "1.1.5"
 espresso = "3.5.1"
 navigation = "2.5.3"
 # @pin - Be sure to use compatible version that is supported by compose compiler https://developer.android.com/jetpack/androidx/releases/compose-kotlin
-kotlin = "1.8.21"
+kotlin = "1.8.22"
 androidGradlePlugin = "8.0.2"
 gradleVersionsPlugin = "0.47.0"
 littleRobotsVersionCatalog = "0.8.0"
