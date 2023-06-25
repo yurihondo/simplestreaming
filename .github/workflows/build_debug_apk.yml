@@ -1,0 +1,36 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Build apk for debug
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+
+      - name: set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '11'
+          cache: 'gradle'
+
+      - name: archive APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: app
+          path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 1
