@@ -8,7 +8,6 @@ on:
         required: true
         type: choice
         options:
-          - prune-pull-requests
           - execute-renovate
 
 run-name: "Manage Renovate PRs by ${{ github.actor }} - ${{ github.event_name }}"
