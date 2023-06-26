@@ -1,0 +1,40 @@
+name: Manage Renovate pull requests
+
+on:
+  workflow_dispatch:
+    inputs:
+      job_name:
+        description: 'A job name'
+        required: true
+        type: choice
+        options:
+          - prune-pull-requests
+          - execute-renovate
+
+run-name: "Manage Renovate PRs by ${{ github.actor }} - ${{ github.event_name }}"
+
+permissions: {}
+
+jobs:
+  # Test job for renovate configurations.
+  # You have to set your PAT to secrets.
+  execute-renovate:
+    if: >
+      inputs.job_name == 'execute-renovate'
+
+    timeout-minutes: 5
+
+    permissions:
+      contents: read
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+      - name: Self-hosted Renovate
+        uses: renovatebot/github-action@2a87d1192eaa0cac92b6566233afedf68fd3472a # v38.1.8
+        with:
+          configurationFile: renovate.json5
+          token: ${{ secrets.RENOVATE_TEST_TOKEN }} # workflow, repo, read user:email permissions
+        env:
+          LOG_LEVEL: 'debug'
+          RENOVATE_REPOSITORIES: ${{ github.repository }}
