@@ -1,0 +1,56 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base"
+  ],
+
+  "timezone": "Asia/Tokyo",
+
+  "prHourlyLimit" : 0, // 0 means no limit
+
+  "prConcurrentLimit": 5,
+
+  // For PRs
+  commitMessagePrefix: "chore: ",
+  "pruneBranchAfterAutomerge": true,
+  "pruneStaleBranches": true,
+  "labels": ["renovate"],
+  reviewers: ["yurihondo"],
+  //  "automergeStrategy": "merge-commit", // This setting does not work for manual merges.
+
+  "packageRules": [
+    // Group dependencies
+    {
+      "matchPackagePrefixes": [
+        "androidx.compose.compiler", "org.jetbrains.kotlin:"
+      ],
+      "groupName": "Compose Compiler and Kotlin",
+      "groupSlug": "compose_compiler_and_kotlin"
+    }
+
+    // Auto marge
+//    {
+//      "matchUpdateTypes": ["minor", "patch"],
+//      "matchCurrentVersion": "!/^0/",
+//      "automerge": true
+//    },
+  ],
+
+  "vulnerabilityAlerts": {
+    "enabled": true
+  },
+
+  "osvVulnerabilityAlerts": true,
+
+  "major": {
+    "minimumReleaseAge": "5 days"
+  },
+
+  "minor": {
+    "minimumReleaseAge": "3 days"
+  },
+
+  "patch": {
+    "minimumReleaseAge": "3 days"
+  }
+}
