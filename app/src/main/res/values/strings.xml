@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">SimpleStreaming</string>
+
+    <!-- Destination -->
+    <string name="destination_name_text">Text</string>
+    <string name="destination_name_settings">Settings</string>
+
 </resources>

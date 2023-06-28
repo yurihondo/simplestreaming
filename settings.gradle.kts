@@ -18,4 +18,7 @@ dependencyResolutionManagement {
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 rootProject.name = "SimpleStreaming"
+
 include(":app")
+include(":feature:text")
+includeBuild("build-logic")
