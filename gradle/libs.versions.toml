@@ -40,6 +40,7 @@ composeUi = { module = "androidx.compose.ui:ui" }
 composeUiToolingPreview = { module = "androidx.compose.ui:ui-tooling-preview" }
 composeUiTooling = { module = "androidx.compose.ui:ui-tooling" }
 composeMaterial3 = { module = "androidx.compose.material3:material3" }
+composeMaterial3IconsExtended = { module = "androidx.compose.material:material-icons-extended" }
 composeUiTestJunit4 = { module = "androidx.compose.ui:ui-test-junit4" }
 composeUiTestManifest = { module = "androidx.compose.ui:ui-test-manifest" }
 composeActivity = { module = "androidx.activity:activity-compose", version.ref = "activity" }
@@ -71,6 +72,7 @@ compose = [
     "composeUi",
     "composeUiToolingPreview",
     "composeMaterial3",
+    "composeMaterial3IconsExtended",
     "composeActivity",
 ]
 

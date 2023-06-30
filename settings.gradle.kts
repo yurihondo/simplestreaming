@@ -1,4 +1,5 @@
 pluginManagement {
+    includeBuild("build-logic")
     repositories {
         google()
         mavenCentral()
@@ -19,6 +20,8 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 rootProject.name = "SimpleStreaming"
 
-include(":app")
-include(":feature:text")
-includeBuild("build-logic")
+include(
+    ":app",
+    ":feature:text",
+    ":feature:setting",
+)

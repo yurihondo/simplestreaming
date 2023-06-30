@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.yurihondo.simplestreaming.text"
+    namespace = "com.yurihondo.simplestreaming.setting"
 
     defaultConfig {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

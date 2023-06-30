@@ -1,16 +1,13 @@
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
+    id("com.yurihondo.simplestreaming.buildlogic.android.application")
+    id("com.yurihondo.simplestreaming.buildlogic.android.kotlin")
 }
 
 android {
     namespace = "com.yurihondo.simplestreaming"
-    compileSdk = 33
 
     defaultConfig {
         applicationId ="com.yurihondo.simplestreaming"
-        minSdk = 24
-        targetSdk = 33
         versionCode = 1
         versionName = "1.0"
 
@@ -27,15 +24,6 @@ android {
             proguardFile(getDefaultProguardFile("proguard-android-optimize.txt"))
             proguardFile(file("proguard-rules.pro"))
         }
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions {
-        jvmTarget = "1.8"
     }
 
     @Suppress("UnstableApiUsage")
@@ -62,6 +50,10 @@ android {
 }
 
 dependencies {
+    // Modules
+    implementation(projects.feature.text)
+    implementation(projects.feature.setting)
+
     // Compose
     val composeBom = platform(libs.composeBom)
     implementation(composeBom)
