@@ -1,11 +1,16 @@
 package com.yurihondo.simplestreaming.ui
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.navigation.compose.rememberNavController
+import com.yurihondo.simplestreaming.navigation.MainNavHost
 
 @Composable
 fun SimpleStreamingApp(
@@ -17,6 +22,22 @@ fun SimpleStreamingApp(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background,
     ) {
-
+        Scaffold(
+            bottomBar = {
+                SimpleStreamingBottomBar(
+                    destinations = appState.topLevelDestinations,
+                    onClickItem = appState::navigateToTopLevelDestination,
+                    currentDestination = appState.currentTopLevelDestination,
+                )
+            },
+            containerColor = Color.Transparent,
+            contentColor = MaterialTheme.colorScheme.onBackground,
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        ) { paddingValues ->
+            MainNavHost(
+                navHostController = appState.navHostController,
+                modifier = Modifier.padding(paddingValues),
+            )
+        }
     }
 }

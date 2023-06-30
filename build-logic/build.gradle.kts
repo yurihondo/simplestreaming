@@ -9,13 +9,11 @@ repositories {
     mavenCentral()
 }
 
-kotlin {
-    jvmToolchain {
+java {
+    toolchain {
         languageVersion.set(JavaLanguageVersion.of(11))
     }
-}
 
-java {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
 }
@@ -26,6 +24,10 @@ dependencies {
 
 gradlePlugin {
     plugins {
+        register("android.application") {
+            id = "com.yurihondo.simplestreaming.buildlogic.android.application"
+            implementationClass = "com.yurihondo.simplestreaming.buildlogic.AndroidAppPlugin"
+        }
         register("android.library") {
             id = "com.yurihondo.simplestreaming.buildlogic.android.library"
             implementationClass = "com.yurihondo.simplestreaming.buildlogic.AndroidLibraryPlugin"
