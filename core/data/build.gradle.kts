@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.yurihondo.simplestreaming.setting"
+    namespace = "com.yurihondo.simplestreaming.data"
 
     defaultConfig {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -21,34 +21,9 @@ android {
             )
         }
     }
-
-    @Suppress("UnstableApiUsage")
-    buildFeatures {
-        compose = true
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
-    }
 }
 
 dependencies {
-    // Compose
-    val composeBom = platform(libs.composeBom)
-    implementation(composeBom)
-    implementation(libs.bundles.compose)
-    androidTestImplementation(composeBom)
-    androidTestImplementation(libs.composeUiTestJunit4)
-    debugImplementation(libs.bundles.composeDebug)
-
-    // Lifecycle
-    implementation(libs.lifecycleRuntimeKtx)
-    implementation(libs.lifecycleRuntimeCompose)
-
-    // Navigation
-    implementation(libs.navigationCompose)
-    implementation(libs.composeHiltNavigtation)
-
     // Test
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidxJunit)
