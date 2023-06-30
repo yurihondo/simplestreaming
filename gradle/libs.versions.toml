@@ -1,5 +1,4 @@
 [versions]
-# Library versions
 # Be sure to use compatible version that is supported by compose compiler
 # https://developer.android.com/jetpack/androidx/releases/compose-kotlin#pre-release_kotlin_compatibility
 kotlin = "1.8.22"
@@ -15,9 +14,9 @@ junit = "4.13.2"
 androidxJunit = "1.1.5"
 espresso = "3.5.1"
 navigation = "2.6.0"
+composeHiltNavigatiaon = "1.0.0"
+dagger = "2.46.1"
 androidDesugarJdkLibs = "2.0.3"
-
-# Plugin versions
 androidGradlePlugin = "8.0.2"
 gradleVersionsPlugin = "0.47.0"
 littleRobotsVersionCatalog = "0.8.0"
@@ -26,6 +25,7 @@ littleRobotsVersionCatalog = "0.8.0"
 # Plugins
 androidGradlePlugin = { group = "com.android.tools.build", name = "gradle", version.ref = "androidGradlePlugin" }
 kotlinGradlePlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
+hiltGradlePlugin = { group = "com.google.dagger", name = "hilt-android-gradle-plugin", version.ref = "dagger" }
 
 # Desugar
 androidDesugarJdkLibs = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "androidDesugarJdkLibs" }
@@ -44,6 +44,12 @@ composeMaterial3IconsExtended = { module = "androidx.compose.material:material-i
 composeUiTestJunit4 = { module = "androidx.compose.ui:ui-test-junit4" }
 composeUiTestManifest = { module = "androidx.compose.ui:ui-test-manifest" }
 composeActivity = { module = "androidx.activity:activity-compose", version.ref = "activity" }
+composeHiltNavigtation = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "composeHiltNavigatiaon" }
+
+# Hilt
+daggerHiltAndroid = { module = "com.google.dagger:hilt-android", version.ref = "dagger" }
+daggerHiltAndroidTesting = { module = "com.google.dagger:hilt-android-testing", version.ref = "dagger" }
+daggerHiltAndroidCompiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "dagger" }
 
 # Androidx
 androidxCore = { module = "androidx.core:core-ktx", version.ref = "core" }
@@ -51,6 +57,7 @@ androidxActivity = { module = "androidx.activity:activity-ktx", version.ref = "a
 
 # Lifecycle
 lifecycleRuntimeKtx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycle" }
+lifecycleRuntimeCompose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
 
 # Navigation
 navigationCompose = { module = "androidx.navigation:navigation-compose", version.ref = "navigation" }
@@ -64,6 +71,7 @@ espressoCore = { module = "androidx.test.espresso:espresso-core", version.ref = 
 androidGradlePlugin = { id = "com.android.application", version.ref = "androidGradlePlugin" }
 androidGradleLibraryPlugin = { id = "com.android.library", version.ref = "androidGradlePlugin" }
 kotlinGradlePlugin = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+hiltGradlePlugin = { id = "com.google.dagger.hilt.android", version.ref = "dagger" }
 gradleVersions = { id = "com.github.ben-manes.versions", version.ref = "gradleVersionsPlugin" }
 littleRobotsVersionCatalog = { id = "nl.littlerobots.version-catalog-update", version.ref = "littleRobotsVersionCatalog" }
 
@@ -88,4 +96,5 @@ composeDebug = [
 plugins = [
     "kotlinGradlePlugin",
     "androidGradlePlugin",
+    "hiltGradlePlugin",
 ]

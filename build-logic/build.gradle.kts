@@ -36,5 +36,9 @@ gradlePlugin {
             id = "com.yurihondo.simplestreaming.buildlogic.android.kotlin"
             implementationClass = "com.yurihondo.simplestreaming.buildlogic.AndroidKotlinPlugin"
         }
+        register("android.hilt") {
+            id = "com.yurihondo.simplestreaming.buildlogic.android.hilt"
+            implementationClass = "com.yurihondo.simplestreaming.buildlogic.AndroidHiltPlugin"
+        }
     }
 }

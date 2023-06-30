@@ -25,3 +25,4 @@ include(
     ":feature:text",
     ":feature:setting",
 )
+include(":core:data")
