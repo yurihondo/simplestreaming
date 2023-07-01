@@ -1,14 +1,20 @@
 package com.yurihondo.simplestreaming.data.repository
 
+import android.util.Log
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import javax.inject.Inject
 
-class AccountRepositoryImpl : AccountRepository {
-    override val isLoggedIn: Flow<Boolean>
-        get() = TODO("Not yet implemented")
-    override val accountName: Flow<String>
-        get() = TODO("Not yet implemented")
+internal class AccountRepositoryImpl @Inject constructor(
+) : AccountRepository {
+
+    private val _isLoggedIn = MutableStateFlow(false)
+    override val isLoggedIn: Flow<Boolean> = _isLoggedIn
+
+    private val _accountName = MutableStateFlow("")
+    override val accountName: Flow<String> = _accountName
 
     override suspend fun login() {
-        TODO("Not yet implemented")
+        Log.d("yuri", "login called")
     }
 }

@@ -1,6 +1,7 @@
 plugins {
     id("com.yurihondo.simplestreaming.buildlogic.android.application")
     id("com.yurihondo.simplestreaming.buildlogic.android.kotlin")
+    id("com.yurihondo.simplestreaming.buildlogic.android.hilt")
 }
 
 android {
@@ -17,12 +18,26 @@ android {
         }
     }
 
+    signingConfigs {
+        getByName("debug") {
+            storeFile = rootProject.file("sign/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     @Suppress("UnstableApiUsage")
     buildTypes {
         release {
             isMinifyEnabled = false
             proguardFile(getDefaultProguardFile("proguard-android-optimize.txt"))
             proguardFile(file("proguard-rules.pro"))
+
+            signingConfig = signingConfigs.getByName("debug")
+        }
+        debug {
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 

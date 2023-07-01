@@ -2,6 +2,7 @@ package com.yurihondo.simplestreaming.setting
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.yurihondo.simplestreaming.data.repository.AccountRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.flowOf
@@ -11,7 +12,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-
+    private val accountRepository: AccountRepository,
+    private val authManager: AuthManager,
 ) : ViewModel() {
 
     val isLoggedIn = flowOf(false).stateIn(
@@ -27,6 +29,9 @@ class SettingsViewModel @Inject constructor(
     )
 
     fun onStartLogin() {
-        viewModelScope.launch { }
+        authManager.login()
+//        viewModelScope.launch {
+//            accountRepository.login()
+//        }
     }
 }

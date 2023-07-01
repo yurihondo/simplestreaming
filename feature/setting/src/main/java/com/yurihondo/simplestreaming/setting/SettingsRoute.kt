@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
-internal fun SettingsRoute(
+fun SettingsRoute(
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel,
 ) {
@@ -55,9 +55,9 @@ private fun SettingsScreen(
     SettingsContent(
         modifier = modifier,
         listState = listState,
-        accountName = "",
-        isLoggedIn = false,
-        onClickLogin = {},
+        accountName = accountName,
+        isLoggedIn = isLoggedIn,
+        onClickLogin = onClickLogin,
     )
 }
 

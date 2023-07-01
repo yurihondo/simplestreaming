@@ -33,6 +33,9 @@ android {
 }
 
 dependencies {
+    // module
+    implementation(projects.core.data)
+
     // Compose
     val composeBom = platform(libs.composeBom)
     implementation(composeBom)
@@ -48,6 +51,9 @@ dependencies {
     // Navigation
     implementation(libs.navigationCompose)
     implementation(libs.composeHiltNavigtation)
+
+    // AppAuth
+    implementation(libs.appAuth)
 
     // Test
     testImplementation(libs.junit)
