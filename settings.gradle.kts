@@ -24,5 +24,5 @@ include(
     ":app",
     ":feature:text",
     ":feature:setting",
+    ":core:data",
 )
-include(":core:data")

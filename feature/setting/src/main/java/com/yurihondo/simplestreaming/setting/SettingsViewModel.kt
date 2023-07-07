@@ -7,13 +7,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val accountRepository: AccountRepository,
-    private val authManager: AuthManager,
 ) : ViewModel() {
 
     val isLoggedIn = flowOf(false).stateIn(
@@ -29,9 +27,6 @@ class SettingsViewModel @Inject constructor(
     )
 
     fun onStartLogin() {
-        authManager.login()
-//        viewModelScope.launch {
-//            accountRepository.login()
-//        }
+        accountRepository.login(AuthActivity::class.java)
     }
 }

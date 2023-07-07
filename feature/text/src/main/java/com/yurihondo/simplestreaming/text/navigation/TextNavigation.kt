@@ -1,5 +1,6 @@
 package com.yurihondo.simplestreaming.text.navigation
 
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
@@ -24,7 +25,9 @@ fun NavGraphBuilder.textGraph(
         composable(
             route = textNavigationRoute,
         ) {
-            TextRoute()
+            TextRoute(
+                viewModel = hiltViewModel()
+            )
         }
     }
 }

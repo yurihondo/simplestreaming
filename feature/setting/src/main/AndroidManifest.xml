@@ -19,6 +19,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data android:scheme="com.yurihondo.simplestreaming" />
+
             </intent-filter>
         </activity>
     </application>

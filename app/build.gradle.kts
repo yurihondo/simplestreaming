@@ -8,7 +8,7 @@ android {
     namespace = "com.yurihondo.simplestreaming"
 
     defaultConfig {
-        applicationId ="com.yurihondo.simplestreaming"
+        applicationId = "com.yurihondo.simplestreaming"
         versionCode = 1
         versionName = "1.0"
 
@@ -57,9 +57,12 @@ android {
                     "META-INF/ASL2.0",
                     "META-INF/AL2.0",
                     "META-INF/*.kotlin_module",
-                    "META-INF/LGPL2.1"
+                    "META-INF/LGPL2.1",
                 )
             )
+            resources {
+                excludes.add("META-INF/DEPENDENCIES")
+            }
         }
     }
 }
