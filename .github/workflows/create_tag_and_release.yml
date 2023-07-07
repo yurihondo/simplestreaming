@@ -33,6 +33,8 @@ jobs:
         run: |
           PR_LIST=$(gh pr list --base ${{ github.event.inputs.branch }} --json number,title,url,state --jq '.[] | select(.state=="MERGED") | "- [#\(.number)](\(.url)) \(.title)"')
           echo "RELEASE_NOTES=$PR_LIST" >> $GITHUB_ENV
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_API_TOKEN }}
 
       - name: Create Release
         uses: actions/create-release@v1
