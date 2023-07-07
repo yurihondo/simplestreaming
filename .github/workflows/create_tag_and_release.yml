@@ -1,23 +1,20 @@
-name: Create Tag and Release
-
-on: 
+name: Create Release and Generate Notes
+on:
   workflow_dispatch:
     inputs:
       branch:
-        description: 'The branch to tag'
+        description: 'The branch to create a release from'
         required: true
-      tag_new:
+      new_tag:
         description: 'The new tag'
         required: true
 
 jobs:
-  tag:
+  create:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
       - name: Set up Git
         run: |
@@ -27,43 +24,21 @@ jobs:
       - name: Create tag
         run: |
           git checkout ${{ github.event.inputs.branch }}
-          git tag ${{ github.event.inputs.tag_new }}
-          git push origin ${{ github.event.inputs.tag_new }}
+          git tag ${{ github.event.inputs.new_tag }}
+          git push origin ${{ github.event.inputs.new_tag }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_API_TOKEN }}
 
-      - name: Install GitHub CLI
+      - name: Generate Release Notes
         run: |
-          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
-          sudo apt-add-repository https://cli.github.com/packages
-          sudo apt update
-          sudo apt install gh
-
-      - name: Get previous tag
-        id: prev_tag
-        run: |
-          echo "::set-output name=tag::$(git describe --tags --abbrev=0 ${GITHUB_REF}~)"
-        
-      - name: Create Release notes
-        id: create_release_notes
-        run: |
-          PR_LIST=$(git log --merges --pretty="%b" ${{ steps.prev_tag.outputs.tag }}..${{ github.event.inputs.tag_new }} | grep 'pull request' | awk '{print $4}' | awk -F"/" '{print $NF}')
-          RELEASE_BODY=""
-          for pr_num in $PR_LIST
-          do
-            if [[ ! -z "$pr_num" && "$pr_num" =~ ^[0-9]+$ ]]; then
-              PR_DATA=$(gh pr view $pr_num --json title,url,number -q '.number + " " + .title + " " + .url')
-              RELEASE_BODY+="- PR#${PR_DATA}\n"
-            fi
-          done
-          echo "RELEASE_BODY=${RELEASE_BODY}" >> $GITHUB_ENV
+          PR_LIST=$(gh pr list --base ${{ github.event.inputs.branch }} --json number,title,url,state --jq '.[] | select(.state=="MERGED") | "- [#\(.number)](\(.url)) \(.title)"')
+          echo "RELEASE_NOTES=$PR_LIST" >> $GITHUB_ENV
 
       - name: Create Release
-        id: create_release
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_API_TOKEN }}
         with:
-          tag_name: ${{ github.event.inputs.tag_new }}
-          release_name: Release ${{ github.event.inputs.tag_new }}
-          body: ${{ env.RELEASE_BODY }}
+          tag_name: ${{ github.event.inputs.new_tag }}
+          release_name: Release ${{ github.event.inputs.new_tag }}
+          body: ${{ env.RELEASE_NOTES }}
