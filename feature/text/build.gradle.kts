@@ -1,6 +1,7 @@
 plugins {
     id("com.yurihondo.simplestreaming.buildlogic.android.library")
     id("com.yurihondo.simplestreaming.buildlogic.android.kotlin")
+    id("com.yurihondo.simplestreaming.buildlogic.android.hilt")
 }
 
 android {
@@ -32,6 +33,9 @@ android {
 }
 
 dependencies {
+    // module
+    implementation(projects.core.data)
+
     // Compose
     val composeBom = platform(libs.composeBom)
     implementation(composeBom)
@@ -42,9 +46,11 @@ dependencies {
 
     // Lifecycle
     implementation(libs.lifecycleRuntimeKtx)
+    implementation(libs.lifecycleRuntimeCompose)
 
     // Navigation
     implementation(libs.navigationCompose)
+    implementation(libs.composeHiltNavigtation)
 
     // Test
     testImplementation(libs.junit)
