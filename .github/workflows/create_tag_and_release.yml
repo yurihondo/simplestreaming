@@ -1,68 +1,62 @@
-name: Create tag and release
+name: Create Tag and Release
 
-on:
+on: 
   workflow_dispatch:
     inputs:
       branch:
         description: 'Branch to tag'
         required: true
       tag:
-        description: 'Tag name'
+        description: 'New tag name'
         required: true
 
 jobs:
-  tag:
+  create_tag_and_release:
     runs-on: ubuntu-latest
+    outputs:
+      previous_tag: ${{ steps.get_previous_tag.outputs.tag }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
       - name: Set up Git
         run: |
           git config user.name "GitHub Actions"
           git config user.email "github-actions@github.com"
+
       - name: Create tag
         run: |
           git checkout ${{ github.event.inputs.branch }}
           git tag ${{ github.event.inputs.tag }}
-          git push https://${{ secrets.PAT }}@github.com/${{ github.repository }} ${{ github.event.inputs.tag }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.ACTIONS_CREATE_TAG_AND_RELEASE }}
-          
-  release:
-    needs: tag
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Create GitHub Release
-        id: create_release
+          git push origin ${{ github.event.inputs.tag }}
+
+      - name: Get previous tag
+        id: get_previous_tag
+        run: |
+          PREV_TAG=$(git describe --abbrev=0 --tags `git rev-list --tags --skip=1 --max-count=1`)
+          echo "Previous tag: $PREV_TAG"
+          echo "::set-output name=tag::$PREV_TAG"
+
+      - name: Create Release Notes
+        id: create_release_notes
+        run: |
+          echo 'RELEASE_BODY<<EOF' > release_notes.txt
+          COMMITS=$(git log --merges --pretty=format:"- %s" ${{ steps.get_previous_tag.outputs.tag }}..${{ github.event.inputs.tag }} --abbrev-commit | grep "Merge pull request #" | awk '{print substr($0, index($0,$3)) }')
+          for COMMIT in $COMMITS
+          do
+            PR_NUM=$(echo $COMMIT | cut -d "#" -f 2 | cut -d " " -f 1)
+            PR_TITLE=$(curl --location --request GET 'https://api.github.com/repos/${{ github.repository }}/pulls/'$PR_NUM -H 'Accept: application/vnd.github.v3+json' -H 'Authorization: token ${{ secrets.GH_API_TOKEN }}' | jq -r '.title')
+            echo "- #$PR_NUM $PR_TITLE" >> release_notes.txt
+          done
+          echo 'EOF' >> release_notes.txt
+
+      - name: Create Release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.event.inputs.tag }}
           release_name: Release ${{ github.event.inputs.tag }}
-          draft: false
-          prerelease: false
-      - name: Get changes
-        id: get_changes
-        run: |
-          echo 'RELEASE_BODY<<EOF' >> $GITHUB_ENV
-          git log --merges --pretty=format:"- %s" ${{ github.event.inputs.tag }}@{1}..${{ github.event.inputs.tag }} >> $GITHUB_ENV
-          echo 'EOF' >> $GITHUB_ENV
-      - name: Update release
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            const release = await github.repos.getReleaseByTag({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag: '${{ github.event.inputs.tag }}'
-            })
-            await github.repos.updateRelease({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              release_id: release.data.id,
-              body: process.env.RELEASE_BODY
-            })
+          body_path: release_notes.txt
