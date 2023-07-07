@@ -60,4 +60,4 @@ jobs:
         with:
           tag_name: ${{ github.event.inputs.tag }}
           release_name: Release ${{ github.event.inputs.tag }}
-          body_path: release_notes.txt
+          body: ${{ env.RELEASE_BODY }}
