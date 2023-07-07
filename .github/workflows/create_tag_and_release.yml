@@ -39,19 +39,16 @@ jobs:
           echo "Previous tag: $PREV_TAG"
           echo "::set-output name=tag::$PREV_TAG"
 
-      - name: Create Release notes
+      - name: Create Release Notes
         id: create_release_notes
         run: |
-          PR_LIST=$(git log --merges --pretty="%b" ${{ github.event.inputs.tag_previous }}..${{ github.event.inputs.tag_new }} | grep 'pull request' | awk '{print $4}' | awk -F"/" '{print $NF}')
-          RELEASE_BODY=""
-          for pr_num in $PR_LIST
+          COMMITS=$(git log --merges --pretty=format:"- %s" ${{ steps.get_previous_tag.outputs.tag }}..${{ github.event.inputs.tag }} --abbrev-commit | grep "Merge pull request #" | awk '{print substr($0, index($0,$3)) }')
+          for COMMIT in $COMMITS
           do
-            PR_DATA=$(gh pr view $pr_num --json title,url,number -q '.number + " " + .title + " " + .url')
-            RELEASE_BODY+="- PR#${PR_DATA}\n"
+            PR_NUM=$(echo $COMMIT | cut -d "#" -f 2 | cut -d " " -f 1)
+            PR_TITLE=$(curl --location --request GET 'https://api.github.com/repos/${{ github.repository }}/pulls/'$PR_NUM -H 'Accept: application/vnd.github.v3+json' -H 'Authorization: token ${{ secrets.GH_API_TOKEN }}' | jq -r '.title')
+            echo "- #$PR_NUM $PR_TITLE" >> release_notes.txt
           done
-          echo "RELEASE_BODY=${RELEASE_BODY}" >> $GITHUB_ENV
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_API_TOKEN }}
 
       - name: Create Release
         uses: actions/create-release@v1
@@ -60,4 +57,4 @@ jobs:
         with:
           tag_name: ${{ github.event.inputs.tag }}
           release_name: Release ${{ github.event.inputs.tag }}
-          body: ${{ env.RELEASE_BODY }}
+          body_path: release_notes.txt
