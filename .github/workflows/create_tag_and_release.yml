@@ -37,7 +37,7 @@ jobs:
 
       - name: Generate release notes
         env:
-          GH_TOKEN: ${{ secrets.GH_API_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           PR_LIST=$(gh api -X GET repos/:owner/:repo/pulls \
             -q ".[] | select(.merged_at >= \"$(gh api -X GET repos/:owner/:repo/git/refs/tags/${{ github.event.inputs.tag_previous }} | jq -r .object.sha | xargs -I {} gh api -X GET repos/:owner/:repo/git/commits/{})\" and .merged_at <= \"$(gh api -X GET repos/:owner/:repo/git/refs/tags/${{ github.event.inputs.tag }} | jq -r .object.sha | xargs -I {} gh api -X GET repos/:owner/:repo/git/commits/{})\") | \"- [#\(.number)](\(.html_url)) \(.title)\"" )
