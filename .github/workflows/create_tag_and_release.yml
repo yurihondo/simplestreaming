@@ -36,21 +36,24 @@ jobs:
           git push origin ${{ github.event.inputs.tag }}
 
       - name: Generate release notes
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        id: generate_release_notes
         run: |
-          PR_LIST=$(gh api -X GET repos/:owner/:repo/pulls \
-            -q ".[] | select(.merged_at >= \"$(gh api -X GET repos/:owner/:repo/git/refs/tags/${{ github.event.inputs.tag_previous }} | jq -r .object.sha | xargs -I {} gh api -X GET repos/:owner/:repo/git/commits/{})\" and .merged_at <= \"$(gh api -X GET repos/:owner/:repo/git/refs/tags/${{ github.event.inputs.tag }} | jq -r .object.sha | xargs -I {} gh api -X GET repos/:owner/:repo/git/commits/{})\") | \"- [#\(.number)](\(.html_url)) \(.title)\"" )
-          echo "RELEASE_NOTES=$PR_LIST" >> $GITHUB_ENV
+          NOTES=$(git log --merges --oneline ${{ github.event.inputs.before_tag }}..${{ github.event.inputs.new_tag }})
+          if [ -z "$NOTES" ]; then
+            NOTES=$(git log --oneline ${{ github.event.inputs.before_tag }}..${{ github.event.inputs.new_tag }})
+          fi
+          echo ::set-output name=notes::$NOTES
 
-      - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create release
+        uses: actions/github-script@v3
         with:
-          tag_name: ${{ github.event.inputs.tag }}
-          release_name: Release ${{ github.event.inputs.tag }}
-          body: ${{ env.RELEASE_NOTES }}
-          draft: false
-          prerelease: false
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const notes = "${{ steps.generate_release_notes.outputs.notes }}"
+            await github.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: "${{ github.event.inputs.new_tag }}",
+              name: "${{ github.event.inputs.new_tag }}",
+              body: notes
+            })
