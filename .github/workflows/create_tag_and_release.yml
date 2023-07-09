@@ -38,9 +38,9 @@ jobs:
       - name: Generate release notes
         id: generate_release_notes
         run: |
-          NOTES=$(git log --merges --oneline ${{ github.event.inputs.before_tag }}..${{ github.event.inputs.new_tag }})
+          NOTES=$(git log --merges --oneline ${{ github.event.inputs.tag_previous }}..${{ github.event.inputs.tag }})
           if [ -z "$NOTES" ]; then
-            NOTES=$(git log --oneline ${{ github.event.inputs.before_tag }}..${{ github.event.inputs.new_tag }})
+            NOTES=$(git log --oneline ${{ github.event.inputs.tag_previous }}..${{ github.event.inputs.tag }})
           fi
           echo ::set-output name=notes::$NOTES
 
@@ -53,7 +53,7 @@ jobs:
             await github.repos.createRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              tag_name: "${{ github.event.inputs.new_tag }}",
-              name: "${{ github.event.inputs.new_tag }}",
+              tag_name: "${{ github.event.inputs.tag }}",
+              name: "${{ github.event.inputs.tag }}",
               body: notes
             })
