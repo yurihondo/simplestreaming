@@ -38,7 +38,7 @@ jobs:
           NOTES=$(git log --oneline ${{ github.event.inputs.tag_previous }}..${{ github.event.inputs.tag }})
           IFS=$'\n'
           for line in $NOTES; do
-          echo "note::$line" >> $GITHUB_OUTPUT
+          echo "note$line" >> $GITHUB_OUTPUT
           done
 
       - name: Create Release
