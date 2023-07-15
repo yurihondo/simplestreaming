@@ -36,8 +36,10 @@ jobs:
         id: generate_release_notes
         run: |
           NOTES=$(git log --oneline ${{ github.event.inputs.tag_previous }}..${{ github.event.inputs.tag }})
+          NOTES="${NOTES//'%'/'%25'}"
           NOTES="${NOTES//$'\n'/'%0A'}"
-          echo "::set-output name=notes::$OUTPUT"
+          NOTES="${NOTES//$'\r'/'%0D'}"
+          echo "::set-output name=notes::$NOTES"
 
       - name: Create Release
         id: create_release
