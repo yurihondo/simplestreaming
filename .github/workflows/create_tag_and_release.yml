@@ -38,12 +38,14 @@ jobs:
           IFS=$'\n'
           output=""
           for line in $(git log --oneline ${{ github.event.inputs.tag_previous }}..${{ github.event.inputs.tag }}); do
+          echo "Processing line: $line"
           line="${line//'%'/'%25'}"
           line="${line//$'\n'/'%0A'}"
           line="${line//$'\r'/'%0D'}"
-          output+="${line}%0A"
+          output+="$line%0A"
           done
-          echo "::set-output name=notes::$output"
+          echo "::set-output name=notes::${output}"
+          echo "Final output: $output"
 
       - name: Create Release
         id: create_release
