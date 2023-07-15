@@ -35,9 +35,12 @@ jobs:
       - name: Generate release notes
         id: generate_release_notes
         run: |
+          echo "Running git log --oneline from ${{ github.event.inputs.tag_previous }} to ${{ github.event.inputs.tag }}"
+          git_log_output="$(git log --oneline ${{ github.event.inputs.tag_previous }}..${{ github.event.inputs.tag }})"
+          echo "Git log output: $git_log_output"
           IFS=$'\n'
           output=""
-          for line in $(git log --oneline ${{ github.event.inputs.tag_previous }}..${{ github.event.inputs.tag }}); do
+          for line in $git_log_output; do
           echo "Processing line: $line"
           line="${line//'%'/'%25'}"
           line="${line//$'\n'/'%0A'}"
@@ -45,7 +48,6 @@ jobs:
           output+="$line%0A"
           done
           echo "::set-output name=notes::${output}"
-          echo "Final output: $output"
 
       - name: Create Release
         id: create_release
