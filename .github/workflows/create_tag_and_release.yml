@@ -20,9 +20,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install jq
-        run: sudo apt-get install jq
-
       - name: Set up Git
         run: |
           git config user.name "GitHub Actions"
@@ -38,10 +35,7 @@ jobs:
       - name: Generate release notes
         id: generate_release_notes
         run: |
-          NOTES=$(git log --merges --oneline ${{ github.event.inputs.tag_previous }}..${{ github.event.inputs.tag }})
-          if [ -z "$NOTES" ]; then
-            NOTES=$(git log --oneline ${{ github.event.inputs.tag_previous }}..${{ github.event.inputs.tag }})
-          fi
+          NOTES=$(git log --oneline ${{ github.event.inputs.tag_previous }}..${{ github.event.inputs.tag }})
           echo ::set-output name=notes::$NOTES
 
       - name: Create release
