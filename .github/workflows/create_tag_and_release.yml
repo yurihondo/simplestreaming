@@ -36,11 +36,7 @@ jobs:
         id: generate_release_notes
         run: |
           NOTES=$(git log --oneline ${{ github.event.inputs.tag_previous }}..${{ github.event.inputs.tag }})
-          IFS=$'\n'
-          OUTPUT=""
-          for line in $NOTES; do
-          OUTPUT+="note::$line\n"
-          done
+          NOTES="${NOTES//$'\n'/'%0A'}"
           echo "::set-output name=notes::$OUTPUT"
 
       - name: Create Release
