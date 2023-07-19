@@ -13,6 +13,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven(url = "https://jitpack.io")
     }
 }
 
@@ -25,4 +26,5 @@ include(
     ":feature:text",
     ":feature:setting",
     ":core:data",
+    ":core:domain",
 )
