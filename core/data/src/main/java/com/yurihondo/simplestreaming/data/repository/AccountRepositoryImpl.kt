@@ -5,10 +5,17 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.datastore.core.DataStore
+import com.yurihondo.simplestreaming.core.model.Auth
 import com.yurihondo.simplestreaming.data.model.GoogleApiAccessToken
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import net.openid.appauth.AuthState
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationRequest
@@ -20,6 +27,7 @@ import javax.inject.Inject
 
 internal class AccountRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val authDataStore: DataStore<Auth>,
 ) : AccountRepository {
 
     companion object {
@@ -30,13 +38,9 @@ internal class AccountRepositoryImpl @Inject constructor(
         private const val scope = "https://www.googleapis.com/auth/youtube"
     }
 
+    private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val appAuthState: AuthState = AuthState.jsonDeserialize("{}")
     private val authService: AuthorizationService = AuthorizationService(context)
-
-    private val config = AuthorizationServiceConfiguration(
-        Uri.parse(authorizationEndpointUri),
-        Uri.parse(tokenEndpointUri)
-    )
 
     private val _isLoggedIn = MutableStateFlow(false)
     override val isLoggedIn: Flow<Boolean> = _isLoggedIn
@@ -47,7 +51,10 @@ internal class AccountRepositoryImpl @Inject constructor(
     override fun <T : Activity> login(redirectActivity: Class<T>) {
         val request = AuthorizationRequest
             .Builder(
-                config,
+                AuthorizationServiceConfiguration(
+                    Uri.parse(authorizationEndpointUri),
+                    Uri.parse(tokenEndpointUri)
+                ),
                 clientId,
                 ResponseTypeValues.CODE,
                 Uri.parse("${context.packageName}:$redirectPath")
@@ -71,13 +78,22 @@ internal class AccountRepositoryImpl @Inject constructor(
         if (res != null && ex == null) {
             authService.performTokenRequest(res.createTokenExchangeRequest()) { tokenResponse, authorizationException ->
                 appAuthState.update(tokenResponse, authorizationException)
+                coroutineScope.launch {
+                    authDataStore.updateData { _ ->
+                        Auth(
+                            accessToken = appAuthState.accessToken,
+                            refreshToken = appAuthState.refreshToken,
+                        )
+                    }
+                    _isLoggedIn.value = true
+                }
             }
         }
-        // TODO: save auth data to encrypted datastore
-        // TODO: notify auth state change
     }
 
-    override fun getAccessToken(): GoogleApiAccessToken {
-        return GoogleApiAccessToken(appAuthState.accessToken.orEmpty())
+    override suspend fun getAccessToken(): GoogleApiAccessToken {
+        return authDataStore.data.first().accessToken?.let { token ->
+            GoogleApiAccessToken(token)
+        } ?: GoogleApiAccessToken.invalid
     }
 }

@@ -12,5 +12,5 @@ interface AccountRepository {
 
     fun saveNewStateFromIntent(data: Intent)
 
-    fun getAccessToken(): GoogleApiAccessToken
+    suspend fun getAccessToken(): GoogleApiAccessToken
 }

@@ -4,5 +4,10 @@ package com.yurihondo.simplestreaming.data.model
 value class GoogleApiAccessToken(
     val value: String,
 ) {
-    fun isValid() = value.isNotEmpty()
+
+    companion object {
+        val invalid = GoogleApiAccessToken("")
+    }
+
+    fun isInvalid() = this == invalid
 }

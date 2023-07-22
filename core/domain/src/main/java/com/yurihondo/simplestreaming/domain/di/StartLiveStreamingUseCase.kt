@@ -11,7 +11,8 @@ class StartTextLiveStreamingUseCase @Inject constructor(
 
     override suspend fun invoke() {
         val token = accountRepository.getAccessToken()
-        if (token.isValid()) liveStreamingRepository.init(token)
+        check(token.isInvalid()) { "User is not logged in" }
+        liveStreamingRepository.init(token)
         liveStreamingRepository.createBroadcast()
     }
 }

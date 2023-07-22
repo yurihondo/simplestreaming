@@ -28,3 +28,5 @@ include(
     ":core:data",
     ":core:domain",
 )
+include(":core:datastore")
+include(":core:model")

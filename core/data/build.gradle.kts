@@ -24,6 +24,10 @@ android {
 }
 
 dependencies {
+    // Modules
+    implementation(projects.core.datastore)
+    implementation(projects.core.model)
+
     // AppAuth
     implementation(libs.appAuth)
 
@@ -35,6 +39,10 @@ dependencies {
     implementation("com.google.apis:google-api-services-youtube:v3-rev20230521-2.0.0") {
         exclude(group = "org.apache.httpcomponents")
     }
+
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
+
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
 
     implementation("com.github.pedroSG94.rtmp-rtsp-stream-client-java:rtplibrary:2.2.4")
 
