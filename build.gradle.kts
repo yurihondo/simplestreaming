@@ -5,8 +5,8 @@ plugins {
     id("com.yurihondo.simplestreaming.buildlogic.android.kotlin") version "unspecified" apply false
     alias(libs.plugins.littleRobotsVersionCatalog)
     alias(libs.plugins.gradleVersions)
-    kotlin("jvm") version "1.8.22"
-    kotlin("plugin.serialization") version "1.8.22"
+    kotlin("jvm") version "1.9.0"
+    kotlin("plugin.serialization") version "1.9.0"
 }
 
 buildscript {
