@@ -20,7 +20,7 @@ class EncryptedAuthSerializer @Inject constructor(
         val encryptedData = input.readBytes()
         if (encryptedData.isEmpty()) return defaultValue
         val decryptedString = cryptoHelper.decrypt(encryptedData).decodeToString()
-        return Json.decodeFromString<Auth>(decryptedString)
+        return Json.decodeFromString(decryptedString)
     }
 
     override suspend fun writeTo(t: Auth, output: OutputStream) {
