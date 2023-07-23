@@ -33,19 +33,30 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.nio.ByteBuffer
 import javax.inject.Inject
+import kotlin.coroutines.coroutineContext
 
 
 internal class LiveStreamingRepositoryImpl @Inject constructor(
 ) : LiveStreamingRepository {
 
-    private val scope = CoroutineScope(Job() + Dispatchers.IO)
+    private val _isStreaming = MutableStateFlow(false)
+    override val isStreaming = _isStreaming.asStateFlow()
 
+    private val scope = CoroutineScope(Job() + Dispatchers.IO)
+    private val width = 1280 // Image width
+    private val height = 720 // Image height
     private lateinit var youtubeApi: YouTube
+    private lateinit var rtmpClient: RtmpClient
+    private lateinit var videoEncoder: VideoEncoder
+    private lateinit var liveBroadcast: LiveBroadcast
+    private lateinit var streamedBitmap: Bitmap
 
     override fun init(accessToken: GoogleApiAccessToken) {
         youtubeApi = YouTube.Builder(
@@ -54,12 +65,6 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
             Credential(BearerToken.authorizationHeaderAccessMethod()).setAccessToken(accessToken.value),
         ).setApplicationName("SimpleStreaming").build()
     }
-
-    private lateinit var rtmpClient: RtmpClient
-    private lateinit var videoEncoder: VideoEncoder
-    private lateinit var liveBroadcast: LiveBroadcast
-    private val width = 1280 // Image width
-    private val height = 720 // Image height
 
     private suspend fun prepareYouTube(): String {
         // Insert the LiveBroadcast
@@ -134,10 +139,12 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
 
             override fun onConnectionSuccessRtmp() {
                 Log.d("YTLiveStreamingApi", "connection success")
+                _isStreaming.value = true
             }
 
             override fun onDisconnectRtmp() {
                 Log.d("YTLiveStreamingApi", "disconnected")
+                _isStreaming.value = false
             }
 
             override fun onNewBitrateRtmp(bitrate: Long) {
@@ -192,14 +199,6 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
         audioEncoder.prepareAudioEncoder(128 * 1024, 44100, false, 0)
         audioEncoder.start()
 
-        // Create a bitmap with "Test" text
-        val testBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(testBitmap)
-        val paint = Paint()
-        paint.color = Color.BLUE
-        paint.textSize = 100f
-        canvas.drawText("Hello, world!", (width / 2).toFloat(), (height / 2).toFloat(), paint)
-
         // Stream bitmap forever
         scope.launch {
             val clearPaint = Paint().apply {
@@ -209,7 +208,7 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
                 // Draw the static image onto the Surface
                 val canvasTemp = surface.lockCanvas(null)
                 canvasTemp.drawPaint(clearPaint)
-                canvasTemp.drawBitmap(testBitmap, 0f, 0f, null)
+                canvasTemp.drawBitmap(streamedBitmap, 0f, 0f, null)
                 surface.unlockCanvasAndPost(canvasTemp)
                 delay(1000L / 60L) // Frame rate 60 fps
             }
@@ -238,6 +237,21 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
                 buffer.position(0) // rewind the buffer
                 delay(1000L) // send 1 time per second
             }
+        }
+    }
+
+    override suspend fun updateStreamingText(text: String) {
+        updateStreamImage(text)
+    }
+
+    private suspend fun updateStreamImage(text: String) {
+        withContext(coroutineContext) {
+            streamedBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(streamedBitmap)
+            val paint = Paint()
+            paint.color = Color.BLUE
+            paint.textSize = 100f
+            canvas.drawText(text, (width / 2).toFloat(), (height / 2).toFloat(), paint)
         }
     }
 }

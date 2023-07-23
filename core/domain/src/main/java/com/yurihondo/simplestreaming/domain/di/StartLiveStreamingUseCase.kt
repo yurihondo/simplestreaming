@@ -7,12 +7,13 @@ import javax.inject.Inject
 class StartTextLiveStreamingUseCase @Inject constructor(
     private val accountRepository: AccountRepository,
     private val liveStreamingRepository: LiveStreamingRepository,
-) : suspend () -> Unit {
+) : suspend (String) -> Unit {
 
-    override suspend fun invoke() {
+    override suspend fun invoke(initText: String) {
         val token = accountRepository.getAccessToken()
-        check(token.isInvalid()) { "User is not logged in" }
+        check(token.isValid()) { "User is not logged in" }
         liveStreamingRepository.init(token)
+        liveStreamingRepository.updateStreamingText(initText)
         liveStreamingRepository.createBroadcast()
     }
 }

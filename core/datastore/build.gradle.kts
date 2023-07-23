@@ -2,7 +2,6 @@ plugins {
     id("com.yurihondo.simplestreaming.buildlogic.android.library")
     id("com.yurihondo.simplestreaming.buildlogic.android.kotlin")
     id("com.yurihondo.simplestreaming.buildlogic.android.hilt")
-    kotlin("plugin.serialization")
 }
 
 android {
@@ -26,6 +25,9 @@ android {
 
 dependencies {
     implementation(projects.core.model)
+
+    // AppAuth
+    implementation(libs.appAuth)
 
     implementation("com.google.crypto.tink:tink-android:1.9.0")
     implementation("androidx.datastore:datastore-preferences:1.0.0")

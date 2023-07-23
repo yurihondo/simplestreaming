@@ -9,5 +9,5 @@ value class GoogleApiAccessToken(
         val invalid = GoogleApiAccessToken("")
     }
 
-    fun isInvalid() = this == invalid
+    fun isValid() = this != invalid
 }

@@ -6,28 +6,32 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.datastore.core.DataStore
-import com.yurihondo.simplestreaming.core.model.Auth
 import com.yurihondo.simplestreaming.data.model.GoogleApiAccessToken
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import net.openid.appauth.AuthState
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationRequest
 import net.openid.appauth.AuthorizationResponse
 import net.openid.appauth.AuthorizationService
+import net.openid.appauth.AuthorizationService.TokenResponseCallback
 import net.openid.appauth.AuthorizationServiceConfiguration
 import net.openid.appauth.ResponseTypeValues
+import net.openid.appauth.TokenRequest
 import javax.inject.Inject
 
 internal class AccountRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val authDataStore: DataStore<Auth>,
+    private val authDataStore: DataStore<AuthState>,
 ) : AccountRepository {
 
     companion object {
@@ -38,15 +42,23 @@ internal class AccountRepositoryImpl @Inject constructor(
         private const val scope = "https://www.googleapis.com/auth/youtube"
     }
 
+    override val isLoggedIn = authDataStore.data.distinctUntilChanged().map { auth -> auth.isAuthorized }
+
+    private val _accountName = MutableStateFlow("")
+    override val accountName = _accountName.asStateFlow()
+
     private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val appAuthState: AuthState = AuthState.jsonDeserialize("{}")
     private val authService: AuthorizationService = AuthorizationService(context)
 
-    private val _isLoggedIn = MutableStateFlow(false)
-    override val isLoggedIn: Flow<Boolean> = _isLoggedIn
-
-    private val _accountName = MutableStateFlow("")
-    override val accountName: Flow<String> = _accountName
+    init {
+        coroutineScope.launch {
+            authDataStore.data.firstOrNull()?.let { state ->
+                if (state.isAuthorized.not()) return@launch
+                appAuthState.update(state.lastTokenResponse, state.authorizationException)
+            }
+        }
+    }
 
     override fun <T : Activity> login(redirectActivity: Class<T>) {
         val request = AuthorizationRequest
@@ -79,21 +91,28 @@ internal class AccountRepositoryImpl @Inject constructor(
             authService.performTokenRequest(res.createTokenExchangeRequest()) { tokenResponse, authorizationException ->
                 appAuthState.update(tokenResponse, authorizationException)
                 coroutineScope.launch {
-                    authDataStore.updateData { _ ->
-                        Auth(
-                            accessToken = appAuthState.accessToken,
-                            refreshToken = appAuthState.refreshToken,
-                        )
-                    }
-                    _isLoggedIn.value = true
+                    authDataStore.updateData { _ -> appAuthState }
                 }
             }
         }
     }
 
     override suspend fun getAccessToken(): GoogleApiAccessToken {
-        return authDataStore.data.first().accessToken?.let { token ->
-            GoogleApiAccessToken(token)
-        } ?: GoogleApiAccessToken.invalid
+        if (appAuthState.needsTokenRefresh) {
+            val result = authService.performTokenRequest(appAuthState.createTokenRefreshRequest())
+            appAuthState.update(result.first, result.second)
+            authDataStore.updateData { _ -> appAuthState }
+        }
+        return appAuthState.accessToken?.let { GoogleApiAccessToken(it) } ?: GoogleApiAccessToken.invalid
+    }
+
+    private suspend fun AuthorizationService.performTokenRequest(
+        request: TokenRequest,
+    ) = suspendCancellableCoroutine { continuation ->
+        val callback = TokenResponseCallback { response, ex ->
+            continuation.resumeWith(Result.success(response to ex))
+        }
+        // Register callback with an API
+        performTokenRequest(request, callback)
     }
 }

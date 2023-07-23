@@ -1,7 +1,6 @@
 plugins {
     id("com.yurihondo.simplestreaming.buildlogic.android.library")
     id("com.yurihondo.simplestreaming.buildlogic.android.kotlin")
-    kotlin("plugin.serialization")
 }
 
 android {
@@ -24,5 +23,4 @@ android {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
 }
