@@ -2,7 +2,7 @@
 # Be sure to use compatible version that is supported by compose compiler
 # https://developer.android.com/jetpack/androidx/releases/compose-kotlin#pre-release_kotlin_compatibility
 kotlin = "1.9.0"
-kotlinxCoroutines = "1.7.2"
+kotlinxCoroutines = "1.7.3"
 composeCompiler = "1.5.0"
 
 # https://developer.android.com/jetpack/compose/bom/bom-mapping
