@@ -1,11 +1,11 @@
+@Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 plugins {
     id("com.yurihondo.simplestreaming.buildlogic.android.library")
     id("com.yurihondo.simplestreaming.buildlogic.android.kotlin")
-    id("com.yurihondo.simplestreaming.buildlogic.android.hilt")
 }
 
 android {
-    namespace = "com.yurihondo.simplestreaming.setting"
+    namespace = "com.yurihondo.simplestreaming.core.ui"
 
     defaultConfig {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -15,10 +15,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 
@@ -33,10 +30,6 @@ android {
 }
 
 dependencies {
-    // module
-    implementation(projects.core.data)
-    implementation(projects.core.ui)
-
     // Compose
     val composeBom = platform(libs.composeBom)
     implementation(composeBom)
@@ -44,20 +37,4 @@ dependencies {
     androidTestImplementation(composeBom)
     androidTestImplementation(libs.composeUiTestJunit4)
     debugImplementation(libs.bundles.composeDebug)
-
-    // Lifecycle
-    implementation(libs.lifecycleRuntimeKtx)
-    implementation(libs.lifecycleRuntimeCompose)
-
-    // Navigation
-    implementation(libs.navigationCompose)
-    implementation(libs.composeHiltNavigtation)
-
-    // AppAuth
-    implementation(libs.appAuth)
-
-    // Test
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidxJunit)
-    androidTestImplementation(libs.espressoCore)
 }

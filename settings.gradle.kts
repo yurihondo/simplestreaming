@@ -30,3 +30,4 @@ include(
 )
 include(":core:datastore")
 include(":core:model")
+include(":core:ui")
