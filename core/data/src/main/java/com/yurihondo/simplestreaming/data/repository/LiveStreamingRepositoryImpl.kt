@@ -11,11 +11,13 @@ import android.util.Log
 import com.google.api.client.auth.oauth2.BearerToken
 import com.google.api.client.auth.oauth2.Credential
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
+import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.client.util.DateTime
 import com.google.api.services.youtube.YouTube
 import com.google.api.services.youtube.model.CdnSettings
 import com.google.api.services.youtube.model.LiveBroadcast
+import com.google.api.services.youtube.model.LiveBroadcastContentDetails
 import com.google.api.services.youtube.model.LiveBroadcastSnippet
 import com.google.api.services.youtube.model.LiveBroadcastStatus
 import com.google.api.services.youtube.model.LiveStream
@@ -53,10 +55,16 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
     private val width = 1280 // Image width
     private val height = 720 // Image height
     private lateinit var youtubeApi: YouTube
-    private lateinit var rtmpClient: RtmpClient
-    private lateinit var videoEncoder: VideoEncoder
-    private lateinit var liveBroadcast: LiveBroadcast
-    private lateinit var streamedBitmap: Bitmap
+
+    private var rtmpClient: RtmpClient? = null
+    private var videoEncoder: VideoEncoder? = null
+    private var audioEncoder: AudioEncoder? = null
+    private var liveBroadcast: LiveBroadcast? = null
+    private var streamedBitmap: Bitmap? = null
+    private var videoJob: Job? = null
+    private var audioJob: Job? = null
+    private var broadcastStatusJob: Job? = null
+
 
     override fun init(accessToken: GoogleApiAccessToken) {
         youtubeApi = YouTube.Builder(
@@ -69,7 +77,7 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
     private suspend fun prepareYouTube(): String {
         // Insert the LiveBroadcast
         val liveBroadcastInsert = youtubeApi.liveBroadcasts().insert(
-            listOf("snippet", "status"),
+            listOf("snippet", "status", "contentDetails"),
             LiveBroadcast().apply {
                 snippet = LiveBroadcastSnippet().apply {
                     title = "Test Broadcast"
@@ -78,6 +86,10 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
                 }
                 status = LiveBroadcastStatus().apply {
                     privacyStatus = "unlisted"
+                    selfDeclaredMadeForKids = false
+                }
+                contentDetails = LiveBroadcastContentDetails().apply {
+                    enableAutoStop = true
                 }
             }
         )
@@ -104,7 +116,7 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
 
         // Bind the broadcast to the stream
         val liveBroadcastBind = youtubeApi.liveBroadcasts().bind(
-            liveBroadcast.id,
+            liveBroadcast?.id,
             listOf("id", "contentDetails"),
         ).apply { streamId = liveStream.id }
         val boundBroadcast = withContext(Dispatchers.IO) { liveBroadcastBind.execute() }
@@ -155,7 +167,7 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
 
         videoEncoder = VideoEncoder(object : GetVideoData {
             override fun onSpsPpsVps(sps: ByteBuffer, pps: ByteBuffer, vps: ByteBuffer?) {
-                rtmpClient.setVideoInfo(sps, pps, vps)
+                rtmpClient?.setVideoInfo(sps, pps, vps)
             }
 
             override fun getVideoData(h264Buffer: ByteBuffer, info: MediaCodec.BufferInfo) {
@@ -165,7 +177,7 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
                     "getVideoData is called, info: presentationTimeUs = ${info.presentationTimeUs}, offset = ${info.offset}, size = ${info.size}, flags = ${info.flags}"
                 )
 
-                rtmpClient.sendVideo(h264Buffer, info)
+                rtmpClient?.sendVideo(h264Buffer, info)
             }
 
             override fun onVideoFormat(mediaFormat: android.media.MediaFormat) {
@@ -173,7 +185,7 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
             }
         })
 
-        videoEncoder.prepareVideoEncoder(
+        videoEncoder?.prepareVideoEncoder(
             1920,
             1080,
             30,
@@ -182,40 +194,46 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
             5,
             FormatVideoEncoder.SURFACE
         )
-        val surface = videoEncoder.inputSurface // MediaCodecのinput surfaceを取得します
-        videoEncoder.start()
-        rtmpClient.setReTries(10)
-        rtmpClient.connect(streamUrl)
+        val surface = videoEncoder?.inputSurface // MediaCodecのinput surfaceを取得します
+        videoEncoder?.start()
+        rtmpClient?.setReTries(10)
+        rtmpClient?.connect(streamUrl)
 
-        val audioEncoder = AudioEncoder(object : GetAacData {
+        audioEncoder = AudioEncoder(object : GetAacData {
             override fun getAacData(aacBuffer: ByteBuffer, info: MediaCodec.BufferInfo) {
-                rtmpClient.sendAudio(aacBuffer, info)
+                rtmpClient?.sendAudio(aacBuffer, info)
             }
 
             override fun onAudioFormat(mediaFormat: android.media.MediaFormat) {
                 // NOP
             }
         })
-        audioEncoder.prepareAudioEncoder(128 * 1024, 44100, false, 0)
-        audioEncoder.start()
+        audioEncoder?.prepareAudioEncoder(128 * 1024, 44100, false, 0)
+        audioEncoder?.start()
 
         // Stream bitmap forever
-        scope.launch {
+        videoJob?.cancel()
+        videoJob = null
+        videoJob = scope.launch {
             val clearPaint = Paint().apply {
                 xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
             }
             while (isActive) {
-                // Draw the static image onto the Surface
-                val canvasTemp = surface.lockCanvas(null)
-                canvasTemp.drawPaint(clearPaint)
-                canvasTemp.drawBitmap(streamedBitmap, 0f, 0f, null)
-                surface.unlockCanvasAndPost(canvasTemp)
-                delay(1000L / 60L) // Frame rate 60 fps
+                streamedBitmap?.let { bitmap ->
+                    // Draw the static image onto the Surface
+                    val canvasTemp = surface?.lockCanvas(null)
+                    canvasTemp?.drawPaint(clearPaint)
+                    canvasTemp?.drawBitmap(bitmap, 0f, 0f, null)
+                    surface?.unlockCanvasAndPost(canvasTemp)
+                    delay(1000L / 60L) // Frame rate 60 fps
+                }
             }
         }
 
         // Stream silent audio forever
-        scope.launch {
+        audioJob?.cancel()
+        audioJob = null
+        audioJob = scope.launch {
             val sampleRate = 44100 // Hz
             val bitDepth = 16 // bits
             val numChannels = 1
@@ -233,9 +251,43 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
 
             // send silence data to the encoder.
             while (isActive) {
-                audioEncoder.inputPCMData(Frame(buffer.array(), 0, bufferSize))
+                audioEncoder?.inputPCMData(Frame(buffer.array(), 0, bufferSize))
                 buffer.position(0) // rewind the buffer
                 delay(1000L) // send 1 time per second
+            }
+        }
+
+        broadcastStatusJob?.cancel()
+        broadcastStatusJob = null
+        broadcastStatusJob = scope.launch {
+            fun transitionStatus(next: String) {
+                youtubeApi.liveBroadcasts().transition(next, liveBroadcast?.id, listOf("snippet", "status")).execute()
+            }
+
+            var status: String? = null
+
+            repeat(12) {
+                delay(5000L)
+                try {
+                    // ライブ配信の情報を取得
+                    val liveBroadcastList = youtubeApi.liveBroadcasts().list(listOf("snippet", "status"))
+                        .setId(listOf(liveBroadcast?.id))
+                        .execute()
+                    status = liveBroadcastList.items.firstOrNull()?.status?.lifeCycleStatus
+
+                    // ライブ配信が存在し、かつ状態が "ready" > "testing" > "live"へ変更
+                    when (status) {
+                        "ready" -> transitionStatus("testing")
+                        "testing" -> transitionStatus("live")
+                        "live" -> return@repeat
+                    }
+                } catch (e: GoogleJsonResponseException) {
+                    Log.e("YTLiveStreamingApi", "Error while monitoring broadcast status: ${e.message}", e)
+                }
+            }
+
+            if (status != "live") {
+                stopStreaming()
             }
         }
     }
@@ -244,14 +296,56 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
         updateStreamImage(text)
     }
 
+    override suspend fun startStreaming() {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun stopStreaming() {
+        withContext(Dispatchers.IO) {
+            // Change status to "complete" if possible
+            broadcastStatusJob?.cancel()
+            broadcastStatusJob = null
+            liveBroadcast?.let { broadcast ->
+                val liveBroadcastList = youtubeApi.liveBroadcasts().list(listOf("snippet", "status"))
+                    .setId(listOf(broadcast.id))
+                    .execute()
+                val status = liveBroadcastList.items.firstOrNull()?.status?.lifeCycleStatus
+                if (status == "live") {
+                    youtubeApi.liveBroadcasts().transition("complete", broadcast.id, listOf("snippet", "status")).execute()
+                }
+            }
+            liveBroadcast = null
+
+            // Stop video streaming
+            videoJob?.cancel()
+            videoJob = null
+            videoEncoder?.stop()
+            videoEncoder = null
+            streamedBitmap?.recycle()
+            streamedBitmap = null
+
+            // Stop audio streaming
+            audioJob?.cancel()
+            audioJob = null
+            audioEncoder?.stop()
+            audioEncoder = null
+
+            // Disconnect from RTMP server
+            rtmpClient?.disconnect()
+            rtmpClient = null
+        }
+    }
+
+
     private suspend fun updateStreamImage(text: String) {
         withContext(coroutineContext) {
-            streamedBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-            val canvas = Canvas(streamedBitmap)
+            val bm = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bm)
             val paint = Paint()
-            paint.color = Color.BLUE
+            paint.color = Color.WHITE
             paint.textSize = 100f
             canvas.drawText(text, (width / 2).toFloat(), (height / 2).toFloat(), paint)
+            streamedBitmap = bm
         }
     }
 }

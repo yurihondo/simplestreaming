@@ -7,9 +7,7 @@ import com.yurihondo.simplestreaming.data.repository.AccountRepository
 import com.yurihondo.simplestreaming.data.repository.LiveStreamingRepository
 import com.yurihondo.simplestreaming.domain.di.StartTextLiveStreamingUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -35,24 +33,29 @@ internal class TextRouteViewModel @Inject constructor(
             initialValue = false,
         )
 
-    private val _inputtedText = MutableStateFlow(TextFieldValue(""))
-    val inputtedText = _inputtedText.asStateFlow()
+    private var inputtedText = ""
 
     fun onStartStreaming() {
         // TODO: Warning if text is empty
         // TODO: warning network condition(not wifi)
         viewModelScope.launch {
-            startTextLiveStreamingUseCase.invoke(inputtedText.value.text)
+            startTextLiveStreamingUseCase.invoke(inputtedText)
         }
     }
 
     fun onInputtedTextUpdated(text: TextFieldValue) {
-        _inputtedText.value = text
+        inputtedText = text.text
     }
 
     fun onUpdateStreamingText() {
         viewModelScope.launch {
-            liveStreamingRepository.updateStreamingText(inputtedText.value.text)
+            liveStreamingRepository.updateStreamingText(inputtedText)
+        }
+    }
+
+    fun onStopStreaming() {
+        viewModelScope.launch {
+            liveStreamingRepository.stopStreaming()
         }
     }
 }

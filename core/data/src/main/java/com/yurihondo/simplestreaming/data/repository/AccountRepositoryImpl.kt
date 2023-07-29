@@ -25,6 +25,7 @@ import net.openid.appauth.AuthorizationResponse
 import net.openid.appauth.AuthorizationService
 import net.openid.appauth.AuthorizationService.TokenResponseCallback
 import net.openid.appauth.AuthorizationServiceConfiguration
+import net.openid.appauth.ClientAuthentication
 import net.openid.appauth.ResponseTypeValues
 import net.openid.appauth.TokenRequest
 import javax.inject.Inject
@@ -48,14 +49,14 @@ internal class AccountRepositoryImpl @Inject constructor(
     override val accountName = _accountName.asStateFlow()
 
     private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val appAuthState: AuthState = AuthState.jsonDeserialize("{}")
     private val authService: AuthorizationService = AuthorizationService(context)
+    private var appAuthState: AuthState = AuthState.jsonDeserialize("{}")
 
     init {
+        // restore state if possible
         coroutineScope.launch {
             authDataStore.data.firstOrNull()?.let { state ->
-                if (state.isAuthorized.not()) return@launch
-                appAuthState.update(state.lastTokenResponse, state.authorizationException)
+                appAuthState = state
             }
         }
     }
@@ -87,6 +88,11 @@ internal class AccountRepositoryImpl @Inject constructor(
     override fun saveNewStateFromIntent(data: Intent) {
         val res = AuthorizationResponse.fromIntent(data)
         val ex = AuthorizationException.fromIntent(data)
+        appAuthState.update(res, ex)
+        coroutineScope.launch {
+            authDataStore.updateData { _ -> appAuthState }
+        }
+
         if (res != null && ex == null) {
             authService.performTokenRequest(res.createTokenExchangeRequest()) { tokenResponse, authorizationException ->
                 appAuthState.update(tokenResponse, authorizationException)
@@ -99,7 +105,7 @@ internal class AccountRepositoryImpl @Inject constructor(
 
     override suspend fun getAccessToken(): GoogleApiAccessToken {
         if (appAuthState.needsTokenRefresh) {
-            val result = authService.performTokenRequest(appAuthState.createTokenRefreshRequest())
+            val result = authService.performTokenRequest(appAuthState.createTokenRefreshRequest(), appAuthState.clientAuthentication)
             appAuthState.update(result.first, result.second)
             authDataStore.updateData { _ -> appAuthState }
         }
@@ -108,11 +114,12 @@ internal class AccountRepositoryImpl @Inject constructor(
 
     private suspend fun AuthorizationService.performTokenRequest(
         request: TokenRequest,
+        clientAuth: ClientAuthentication,
     ) = suspendCancellableCoroutine { continuation ->
         val callback = TokenResponseCallback { response, ex ->
             continuation.resumeWith(Result.success(response to ex))
         }
         // Register callback with an API
-        performTokenRequest(request, callback)
+        performTokenRequest(request, clientAuth, callback)
     }
 }

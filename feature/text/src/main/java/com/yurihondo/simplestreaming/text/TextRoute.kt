@@ -42,7 +42,7 @@ internal fun TextRoute(
         isLoggedIn = isLoggedIn,
         isInStreaming = isStreaming,
         onClickStartStreaming = viewModel::onStartStreaming,
-        onClickStopStreaming = {},
+        onClickStopStreaming = viewModel::onStopStreaming,
         onUpdateStreamingText = viewModel::onUpdateStreamingText,
         onInputtedTextChange = viewModel::onInputtedTextUpdated,
         modifier = modifier,
