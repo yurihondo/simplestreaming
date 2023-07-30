@@ -12,7 +12,8 @@ buildscript {
         google()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:8.1.0")
+        classpath(libs.androidGradlePlugin)
+        classpath(libs.ossLicensesPlugin)
     }
 }
 

@@ -56,6 +56,9 @@ dependencies {
     // AppAuth
     implementation(libs.appAuth)
 
+    // OSS Licenses
+    implementation(libs.playServicesOssLicenses)
+
     // Test
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidxJunit)

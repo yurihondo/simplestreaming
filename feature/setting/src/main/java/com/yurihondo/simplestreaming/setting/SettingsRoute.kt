@@ -48,8 +48,9 @@ import com.yurihondo.simplestreaming.core.ui.R as CoreR
 
 @Composable
 fun SettingsRoute(
-    modifier: Modifier = Modifier,
     viewModel: SettingsViewModel,
+    onClickLicenseItem: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val accountName by viewModel.accountName.collectAsStateWithLifecycle()
     val isLoggedIn by viewModel.isLoggedIn.collectAsStateWithLifecycle()
@@ -59,6 +60,7 @@ fun SettingsRoute(
         accountName = accountName,
         isLoggedIn = isLoggedIn,
         onClickLogin = viewModel::onStartLogin,
+        onClickLicenseItem = onClickLicenseItem
     )
 }
 
@@ -69,6 +71,7 @@ private fun SettingsScreen(
     accountName: String,
     isLoggedIn: Boolean,
     onClickLogin: () -> Unit,
+    onClickLicenseItem: () -> Unit,
 ) {
     SettingsContent(
         modifier = modifier,
@@ -76,6 +79,7 @@ private fun SettingsScreen(
         accountName = accountName,
         isLoggedIn = isLoggedIn,
         onClickLogin = onClickLogin,
+        onClickLicenseItem = onClickLicenseItem,
     )
 }
 
@@ -88,6 +92,7 @@ private fun SettingsContent(
     accountName: String,
     isLoggedIn: Boolean,
     onClickLogin: () -> Unit,
+    onClickLicenseItem: () -> Unit,
 ) {
     Scaffold(
         modifier = modifier,
@@ -125,6 +130,11 @@ private fun SettingsContent(
             simpleMessageDialogItem(
                 itemName = "Privacy policy",
                 dialogMessageResId = CoreR.string.privacy_policy_txt,
+            )
+
+            simpleSettingItem(
+                itemName = "License",
+                onClick = onClickLicenseItem,
             )
         }
     }
@@ -164,6 +174,31 @@ private fun AccountCard(
             Button(onClick = onClickLogin) {
                 Text(text = "Login", style = MaterialTheme.typography.labelMedium)
             }
+        }
+    }
+}
+private fun LazyListScope.simpleSettingItem(
+    itemName: String,
+    onClick: () -> Unit,
+) {
+    item {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .clickable(onClick = onClick),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                modifier = Modifier.padding(start = 8.dp),
+                text = itemName,
+                style = MaterialTheme.typography.titleMedium
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Icon(
+                imageVector = Icons.Default.ArrowForwardIos,
+                contentDescription = itemName
+            )
         }
     }
 }
@@ -230,7 +265,8 @@ private fun PreviewSettingsContent() {
             listState = rememberLazyListState(),
             accountName = "",
             isLoggedIn = false,
-            onClickLogin = {}
+            onClickLogin = {},
+            onClickLicenseItem = {},
         )
     }
 }

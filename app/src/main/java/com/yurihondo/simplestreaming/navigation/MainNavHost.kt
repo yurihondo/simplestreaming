@@ -24,9 +24,11 @@ fun MainNavHost(
             navController = navHostController,
             onNavigateToHome = navHostController::navigateToTextGraph
         )
+
         textGraph(
             navController = navHostController
         )
+
         settingGraph(
             navController = navHostController
         )

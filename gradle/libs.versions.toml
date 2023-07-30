@@ -21,12 +21,15 @@ androidDesugarJdkLibs = "2.0.3"
 androidGradlePlugin = "8.1.0"
 gradleVersionsPlugin = "0.47.0"
 littleRobotsVersionCatalog = "0.8.1"
+ossLicenses = "0.10.6"
+playServicesOssLicenses = "17.0.1"
 
 [libraries]
 # Plugins
 androidGradlePlugin = { group = "com.android.tools.build", name = "gradle", version.ref = "androidGradlePlugin" }
 kotlinGradlePlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 hiltGradlePlugin = { group = "com.google.dagger", name = "hilt-android-gradle-plugin", version.ref = "dagger" }
+ossLicensesPlugin = { module = "com.google.android.gms:oss-licenses-plugin", version.ref = "ossLicenses" }
 
 # Desugar
 androidDesugarJdkLibs = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "androidDesugarJdkLibs" }
@@ -65,6 +68,9 @@ navigationCompose = { module = "androidx.navigation:navigation-compose", version
 
 # AppAuth
 appAuth = { module = "net.openid:appauth", version.ref = "appauth" }
+
+# OSS Licenses
+playServicesOssLicenses = { module = "com.google.android.gms:play-services-oss-licenses", version.ref = "playServicesOssLicenses" }
 
 # Test
 junit = { module = "junit:junit", version.ref = "junit" }

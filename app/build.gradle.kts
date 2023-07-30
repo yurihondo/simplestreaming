@@ -2,6 +2,7 @@ plugins {
     id("com.yurihondo.simplestreaming.buildlogic.android.application")
     id("com.yurihondo.simplestreaming.buildlogic.android.kotlin")
     id("com.yurihondo.simplestreaming.buildlogic.android.hilt")
+    id("com.google.android.gms.oss-licenses-plugin")
 }
 
 android {
