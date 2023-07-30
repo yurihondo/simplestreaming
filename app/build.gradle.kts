@@ -69,8 +69,11 @@ android {
 
 dependencies {
     // Modules
+    implementation(projects.core.ui)
     implementation(projects.feature.text)
     implementation(projects.feature.setting)
+    implementation(projects.feature.welcome)
+    implementation(projects.core.data)
 
     // Compose
     val composeBom = platform(libs.composeBom)

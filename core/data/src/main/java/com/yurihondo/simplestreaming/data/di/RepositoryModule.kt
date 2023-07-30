@@ -4,6 +4,8 @@ import com.yurihondo.simplestreaming.data.repository.AccountRepository
 import com.yurihondo.simplestreaming.data.repository.AccountRepositoryImpl
 import com.yurihondo.simplestreaming.data.repository.LiveStreamingRepository
 import com.yurihondo.simplestreaming.data.repository.LiveStreamingRepositoryImpl
+import com.yurihondo.simplestreaming.data.repository.UserRepository
+import com.yurihondo.simplestreaming.data.repository.UserRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -25,4 +27,10 @@ abstract class RepositoryModule {
     internal abstract fun bindLiveStreamingRepository(
         impl: LiveStreamingRepositoryImpl
     ): LiveStreamingRepository
+
+    @Binds
+    @Singleton
+    internal abstract fun bindUserRepository(
+        impl: UserRepositoryImpl
+    ): UserRepository
 }

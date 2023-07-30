@@ -16,6 +16,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -63,17 +64,20 @@ private fun TextScreen(
     Scaffold(
         modifier = modifier,
         topBar = {
-            Text(
-                modifier = Modifier.padding(start = 16.dp, top = 16.dp),
-                text = "Text streaming",
-                style = MaterialTheme.typography.displaySmall,
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Text streaming",
+                        style = MaterialTheme.typography.displaySmall
+                    )
+                }
             )
         }
     ) {
         Column(
             modifier = Modifier
                 .padding(it)
-                .padding(horizontal = 16.dp)
+                .padding(start = 16.dp, top = 48.dp, end = 16.dp)
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -86,9 +90,7 @@ private fun TextScreen(
                     text = new
                     onInputtedTextChange(new)
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 48.dp),
+                modifier = Modifier.fillMaxWidth(),
                 placeholder = {
                     Text(
                         text = "Enter text to stream",

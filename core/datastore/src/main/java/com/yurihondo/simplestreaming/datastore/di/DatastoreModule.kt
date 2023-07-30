@@ -4,6 +4,9 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStoreFile
 import com.yurihondo.simplestreaming.datastore.CryptoHelper
 import com.yurihondo.simplestreaming.datastore.EncryptedAuthStateSerializer
 import dagger.Module
@@ -26,7 +29,18 @@ object DataStoreModule {
         return DataStoreFactory.create(
             serializer = EncryptedAuthStateSerializer(CryptoHelper(context))
         ) {
-            context.dataStoreFile("auth_preferences.pb")
+            context.dataStoreFile("auth_preferences")
+        }
+    }
+
+    @UserPreferencesDataStore
+    @Provides
+    @Singleton
+    fun provideUserDateStore(
+        @ApplicationContext context: Context,
+    ): DataStore<Preferences> {
+        return PreferenceDataStoreFactory.create {
+            context.preferencesDataStoreFile("user")
         }
     }
 }

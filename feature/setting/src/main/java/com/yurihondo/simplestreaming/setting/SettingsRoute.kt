@@ -8,6 +8,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,11 +24,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.NoAccounts
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,7 +43,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.yurihondo.simplestreaming.core.ui.HyperlinkText
+import com.yurihondo.simplestreaming.core.ui.text.HyperlinkText
+import com.yurihondo.simplestreaming.core.ui.R as CoreR
 
 @Composable
 fun SettingsRoute(
@@ -75,6 +79,7 @@ private fun SettingsScreen(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 private fun SettingsContent(
@@ -87,22 +92,20 @@ private fun SettingsContent(
     Scaffold(
         modifier = modifier,
         topBar = {
-            Row(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth(),
-            ) {
-                Text(
-                    text = "Settings",
-                    style = MaterialTheme.typography.headlineMedium,
-                )
-            }
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Settings",
+                        style = MaterialTheme.typography.displaySmall
+                    )
+                }
+            )
         }
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp),
+                .padding(paddingValues),
+            contentPadding = PaddingValues(start = 16.dp, top = 48.dp, end = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             state = listState,
         ) {
@@ -116,12 +119,12 @@ private fun SettingsContent(
 
             simpleMessageDialogItem(
                 itemName = "Terms of use",
-                dialogMessageResId = R.string.terms_of_use_txt,
+                dialogMessageResId = CoreR.string.terms_of_use_txt,
             )
 
             simpleMessageDialogItem(
                 itemName = "Privacy policy",
-                dialogMessageResId = R.string.privacy_policy_txt,
+                dialogMessageResId = CoreR.string.privacy_policy_txt,
             )
         }
     }
