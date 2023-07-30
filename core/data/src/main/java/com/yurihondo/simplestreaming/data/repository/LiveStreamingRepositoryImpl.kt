@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
+import android.graphics.Rect
 import android.media.MediaCodec
 import android.util.Log
 import com.google.api.client.auth.oauth2.BearerToken
@@ -52,8 +53,8 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
     override val isStreaming = _isStreaming.asStateFlow()
 
     private val scope = CoroutineScope(Job() + Dispatchers.IO)
-    private val width = 1280 // Image width
-    private val height = 720 // Image height
+    private val width = 1920 // Image width
+    private val height = 1080 // Image height
     private lateinit var youtubeApi: YouTube
 
     private var rtmpClient: RtmpClient? = null
@@ -75,6 +76,8 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
     }
 
     private suspend fun prepareYouTube(): String {
+        Log.d("YTLiveStreamingApi", "prepareYouTube is called.")
+
         // Insert the LiveBroadcast
         val liveBroadcastInsert = youtubeApi.liveBroadcasts().insert(
             listOf("snippet", "status", "contentDetails"),
@@ -333,6 +336,7 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
             // Disconnect from RTMP server
             rtmpClient?.disconnect()
             rtmpClient = null
+
         }
     }
 
@@ -342,9 +346,22 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
             val bm = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(bm)
             val paint = Paint()
-            paint.color = Color.WHITE
+
+            val strokeWidth = 5f  // 枠線の太さを設定
+            paint.color = Color.WHITE  // 枠線の色を設定
+            paint.style = Paint.Style.STROKE  // 描画モードをSTROKEに設定して、塗りつぶしをしないようにする
+            paint.strokeWidth = strokeWidth  // 枠線の太さを設定
+            canvas.drawRect(strokeWidth/2, strokeWidth/2, width - strokeWidth/2, height - strokeWidth/2, paint)  // 枠線を描画
+
+            paint.color = Color.WHITE  // テキストの色を設定
+            paint.style = Paint.Style.FILL  // 描画モードをFILLに変更してテキストを塗りつぶし
             paint.textSize = 100f
-            canvas.drawText(text, (width / 2).toFloat(), (height / 2).toFloat(), paint)
+            val bounds = Rect()
+            paint.getTextBounds(text, 0, text.length, bounds)
+            val x = (width - bounds.width()) / 2.0f
+            val y = (height + bounds.height()) / 2.0f
+            canvas.drawText(text, x, y, paint)
+
             streamedBitmap = bm
         }
     }
