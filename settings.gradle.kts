@@ -25,10 +25,10 @@ include(
     ":app",
     ":feature:text",
     ":feature:setting",
+    ":feature:welcome",
     ":core:data",
     ":core:domain",
+    ":core:datastore",
+    ":core:model",
+    ":core:ui",
 )
-include(":core:datastore")
-include(":core:model")
-include(":core:ui")
-include(":feature:welcome")
