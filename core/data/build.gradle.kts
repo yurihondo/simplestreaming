@@ -33,7 +33,7 @@ dependencies {
 
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
-    implementation("com.github.pedroSG94.rtmp-rtsp-stream-client-java:rtplibrary:2.2.4")
+    implementation("com.github.pedroSG94.rtmp-rtsp-stream-client-java:rtplibrary:2.2.6")
 
     // Test
     testImplementation(libs.junit)
