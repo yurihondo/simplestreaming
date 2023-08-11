@@ -25,7 +25,7 @@ dependencies {
         exclude(group = "org.apache.httpcomponents")
     }
     implementation("com.google.api-client:google-api-client-gson:2.2.0")
-    implementation("com.google.apis:google-api-services-youtube:v3-rev20230521-2.0.0") {
+    implementation("com.google.apis:google-api-services-youtube:v3-rev20230807-2.0.0") {
         exclude(group = "org.apache.httpcomponents")
     }
 
