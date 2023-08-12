@@ -15,15 +15,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.NoAccounts
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -39,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -153,7 +155,10 @@ private fun AccountCard(
             .clip(RoundedCornerShape(10.dp))
             .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(10.dp))
             .background(MaterialTheme.colorScheme.primaryContainer)
-            .padding(8.dp),
+            .clickable {
+                if (!isLoggedIn) onClickLogin.invoke()
+            }
+            .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Image(
@@ -162,7 +167,7 @@ private fun AccountCard(
                 .size(48.dp),
             contentDescription = null,
             contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-            imageVector = Icons.Default.NoAccounts,
+            imageVector = if (isLoggedIn) Icons.Default.AccountCircle else Icons.Default.NoAccounts,
         )
         Text(
             modifier = Modifier.padding(start = 8.dp),
@@ -171,12 +176,15 @@ private fun AccountCard(
         )
         Spacer(modifier = Modifier.weight(1f))
         if (!isLoggedIn) {
-            Button(onClick = onClickLogin) {
-                Text(text = "Login", style = MaterialTheme.typography.labelMedium)
-            }
+            Image(
+                modifier = Modifier.width(128.dp),
+                painter = painterResource(id = R.drawable.yt_logo_rgb_dark),
+                contentDescription = "YouTube",
+            )
         }
     }
 }
+
 private fun LazyListScope.simpleSettingItem(
     itemName: String,
     onClick: () -> Unit,
@@ -264,7 +272,7 @@ private fun PreviewSettingsContent() {
         SettingsContent(
             listState = rememberLazyListState(),
             accountName = "",
-            isLoggedIn = false,
+            isLoggedIn = true,
             onClickLogin = {},
             onClickLicenseItem = {},
         )
