@@ -126,7 +126,7 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
         Log.d("YTLiveStreamingApi", "bound broadcast info: $boundBroadcast.")
 
         // Get the RTMP URL and Stream Name
-        val rtmpUrl = liveStream.cdn.ingestionInfo.ingestionAddress
+        val rtmpUrl = liveStream.cdn.ingestionInfo.rtmpsIngestionAddress
         val streamName = liveStream.cdn.ingestionInfo.streamName
         return "$rtmpUrl/$streamName"
     }
