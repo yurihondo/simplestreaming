@@ -43,7 +43,7 @@ internal class AccountRepositoryImpl @Inject constructor(
         private const val scope = "https://www.googleapis.com/auth/youtube"
     }
 
-    override val isLoggedIn = authDataStore.data.distinctUntilChanged().map { auth -> auth.isAuthorized }
+    override val isLoggedIn = authDataStore.data.map { auth -> auth.isAuthorized }.distinctUntilChanged()
 
     private val _accountName = MutableStateFlow("")
     override val accountName = _accountName.asStateFlow()

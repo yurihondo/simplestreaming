@@ -336,7 +336,6 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
             // Disconnect from RTMP server
             rtmpClient?.disconnect()
             rtmpClient = null
-
         }
     }
 
