@@ -40,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale.Companion.Crop
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -155,9 +156,7 @@ private fun AccountCard(
             .clip(RoundedCornerShape(10.dp))
             .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(10.dp))
             .background(MaterialTheme.colorScheme.primaryContainer)
-            .clickable {
-                if (!isLoggedIn) onClickLogin.invoke()
-            }
+            .clickable(onClick = onClickLogin)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -166,22 +165,20 @@ private fun AccountCard(
                 .padding(start = 8.dp)
                 .size(48.dp),
             contentDescription = null,
-            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+            contentScale = Crop,
             imageVector = if (isLoggedIn) Icons.Default.AccountCircle else Icons.Default.NoAccounts,
         )
         Text(
             modifier = Modifier.padding(start = 8.dp),
-            text = name,
+            text = if (isLoggedIn) name else "Touch to login",
             style = MaterialTheme.typography.bodyLarge,
         )
         Spacer(modifier = Modifier.weight(1f))
-        if (!isLoggedIn) {
-            Image(
-                modifier = Modifier.width(128.dp),
-                painter = painterResource(id = R.drawable.yt_logo_rgb_dark),
-                contentDescription = "YouTube",
-            )
-        }
+        Image(
+            modifier = Modifier.width(128.dp),
+            painter = painterResource(id = R.drawable.yt_logo_rgb_dark),
+            contentDescription = "YouTube",
+        )
     }
 }
 
@@ -272,7 +269,7 @@ private fun PreviewSettingsContent() {
         SettingsContent(
             listState = rememberLazyListState(),
             accountName = "",
-            isLoggedIn = true,
+            isLoggedIn = false,
             onClickLogin = {},
             onClickLicenseItem = {},
         )

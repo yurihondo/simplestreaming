@@ -14,7 +14,7 @@ class SettingsViewModel @Inject constructor(
     private val accountRepository: AccountRepository,
 ) : ViewModel() {
 
-    val isLoggedIn = flowOf(false).stateIn(
+    val isLoggedIn = accountRepository.isLoggedIn.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = false,

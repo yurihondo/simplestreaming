@@ -13,7 +13,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -28,6 +27,7 @@ import net.openid.appauth.AuthorizationServiceConfiguration
 import net.openid.appauth.ClientAuthentication
 import net.openid.appauth.ResponseTypeValues
 import net.openid.appauth.TokenRequest
+import net.openid.appauth.TokenResponse
 import javax.inject.Inject
 
 internal class AccountRepositoryImpl @Inject constructor(
@@ -43,7 +43,10 @@ internal class AccountRepositoryImpl @Inject constructor(
         private const val scope = "https://www.googleapis.com/auth/youtube"
     }
 
-    override val isLoggedIn = authDataStore.data.map { auth -> auth.isAuthorized }.distinctUntilChanged()
+    override val isLoggedIn = authDataStore.data.map { auth ->
+        auth.isAuthorized
+        auth.isAuthorized
+    }
 
     private val _accountName = MutableStateFlow("")
     override val accountName = _accountName.asStateFlow()
@@ -88,17 +91,11 @@ internal class AccountRepositoryImpl @Inject constructor(
     override fun saveNewStateFromIntent(data: Intent) {
         val res = AuthorizationResponse.fromIntent(data)
         val ex = AuthorizationException.fromIntent(data)
-        appAuthState.update(res, ex)
-        coroutineScope.launch {
-            authDataStore.updateData { _ -> appAuthState }
-        }
+        appAuthState.updateAndSave(res, ex)
 
         if (res != null && ex == null) {
             authService.performTokenRequest(res.createTokenExchangeRequest()) { tokenResponse, authorizationException ->
-                appAuthState.update(tokenResponse, authorizationException)
-                coroutineScope.launch {
-                    authDataStore.updateData { _ -> appAuthState }
-                }
+                appAuthState.updateAndSave(tokenResponse, authorizationException)
             }
         }
     }
@@ -106,10 +103,28 @@ internal class AccountRepositoryImpl @Inject constructor(
     override suspend fun getAccessToken(): GoogleApiAccessToken {
         if (appAuthState.needsTokenRefresh) {
             val result = authService.performTokenRequest(appAuthState.createTokenRefreshRequest(), appAuthState.clientAuthentication)
-            appAuthState.update(result.first, result.second)
-            authDataStore.updateData { _ -> appAuthState }
+            appAuthState.updateAndSave(result.first, result.second)
         }
         return appAuthState.accessToken?.let { GoogleApiAccessToken(it) } ?: GoogleApiAccessToken.invalid
+    }
+
+    private fun AuthState.updateAndSave(authRes: AuthorizationResponse?, authException: AuthorizationException?) {
+        update(authRes, authException)
+        authDataStore.save(this)
+    }
+
+    private fun AuthState.updateAndSave(tokenRes: TokenResponse?, authException: AuthorizationException?) {
+        update(tokenRes, authException)
+        authDataStore.save(this)
+    }
+
+    private fun DataStore<AuthState>.save(authState: AuthState) {
+        coroutineScope.launch {
+            updateData { _ ->
+                // DataStore updates are not performed by passing the same instance, so pass a copy
+                AuthState.jsonDeserialize(authState.jsonSerializeString())
+            }
+        }
     }
 
     private suspend fun AuthorizationService.performTokenRequest(
