@@ -1,7 +1,7 @@
 [versions]
 # Be sure to use compatible version that is supported by compose compiler
 # https://developer.android.com/jetpack/androidx/releases/compose-kotlin#pre-release_kotlin_compatibility
-kotlin = "1.9.0"
+kotlin = "1.9.10"
 kotlinxCoroutines = "1.7.3"
 composeCompiler = "1.5.1"
 
