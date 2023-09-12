@@ -36,17 +36,14 @@ internal class AccountRepositoryImpl @Inject constructor(
 ) : AccountRepository {
 
     companion object {
-        private const val authorizationEndpointUri = "https://accounts.google.com/o/oauth2/v2/auth"
-        private const val tokenEndpointUri = "https://oauth2.googleapis.com/token"
-        private const val clientId = ""
-        private const val redirectPath = "/google"
-        private const val scope = "https://www.googleapis.com/auth/youtube"
+        private const val AUTHORIZATION_EP_URI = "https://accounts.google.com/o/oauth2/v2/auth"
+        private const val TOKEN_EP_URI = "https://oauth2.googleapis.com/token"
+        private const val CLIENT_ID = ""
+        private const val REDIRECT_PATH = "/google"
+        private const val SCOPE = "https://www.googleapis.com/auth/youtube"
     }
 
-    override val isLoggedIn = authDataStore.data.map { auth ->
-        auth.isAuthorized
-        auth.isAuthorized
-    }
+    override val isLoggedIn = authDataStore.data.map { auth -> auth.isAuthorized }
 
     private val _accountName = MutableStateFlow("")
     override val accountName = _accountName.asStateFlow()
@@ -68,14 +65,14 @@ internal class AccountRepositoryImpl @Inject constructor(
         val request = AuthorizationRequest
             .Builder(
                 AuthorizationServiceConfiguration(
-                    Uri.parse(authorizationEndpointUri),
-                    Uri.parse(tokenEndpointUri)
+                    Uri.parse(AUTHORIZATION_EP_URI),
+                    Uri.parse(TOKEN_EP_URI)
                 ),
-                clientId,
+                CLIENT_ID,
                 ResponseTypeValues.CODE,
-                Uri.parse("${context.packageName}:$redirectPath")
+                Uri.parse("${context.packageName}:$REDIRECT_PATH")
             )
-            .setScope(scope)
+            .setScope(SCOPE)
             .build()
 
         val postAuthorizationIntent = Intent(context, redirectActivity)
@@ -94,8 +91,8 @@ internal class AccountRepositoryImpl @Inject constructor(
         appAuthState.updateAndSave(res, ex)
 
         if (res != null && ex == null) {
-            authService.performTokenRequest(res.createTokenExchangeRequest()) { tokenResponse, authorizationException ->
-                appAuthState.updateAndSave(tokenResponse, authorizationException)
+            authService.performTokenRequest(res.createTokenExchangeRequest()) { tokenResponse, exception ->
+                appAuthState.updateAndSave(tokenResponse, exception)
             }
         }
     }
