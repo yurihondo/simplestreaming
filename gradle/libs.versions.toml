@@ -23,6 +23,10 @@ gradleVersionsPlugin = "0.47.0"
 littleRobotsVersionCatalog = "0.8.1"
 ossLicenses = "0.10.6"
 playServicesOssLicenses = "17.0.1"
+gson = "2.2.0"
+youtube = "v3-rev20230904-2.0.0"
+dataStore = "1.0.0"
+tink = "1.10.0"
 
 [libraries]
 # Plugins
@@ -66,11 +70,23 @@ lifecycleRuntimeCompose = { module = "androidx.lifecycle:lifecycle-runtime-compo
 # Navigation
 navigationCompose = { module = "androidx.navigation:navigation-compose", version.ref = "navigation" }
 
+# DateStore
+dataStore = { module = "androidx.datastore:datastore-preferences", version.ref = "dataStore" }
+
+# Gson
+gson = { module = "com.google.api-client:google-api-client-gson", version.ref = "gson" }
+
+# YouTube Data API
+youtubeDataApi = { module = "com.google.apis:google-api-services-youtube", version.ref = "youtube" }
+
 # AppAuth
 appAuth = { module = "net.openid:appauth", version.ref = "appauth" }
 
 # OSS Licenses
 playServicesOssLicenses = { module = "com.google.android.gms:play-services-oss-licenses", version.ref = "playServicesOssLicenses" }
+
+# Google Tink
+tink = { module = "com.google.crypto.tink:tink-android", version.ref = "tink" }
 
 # Test
 junit = { module = "junit:junit", version.ref = "junit" }
