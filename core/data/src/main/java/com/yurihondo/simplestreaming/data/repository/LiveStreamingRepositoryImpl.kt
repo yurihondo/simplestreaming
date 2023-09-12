@@ -35,6 +35,7 @@ import com.yurihondo.simplestreaming.data.model.GoogleApiAccessToken
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -49,23 +50,26 @@ import kotlin.coroutines.coroutineContext
 internal class LiveStreamingRepositoryImpl @Inject constructor(
 ) : LiveStreamingRepository {
 
+    companion object {
+        private const val IMAGE_WIDTH = 1920
+        private const val IMAGE_HEIGHT = 1080
+    }
+
     private val _isStreaming = MutableStateFlow(false)
     override val isStreaming = _isStreaming.asStateFlow()
 
-    private val scope = CoroutineScope(Job() + Dispatchers.IO)
-    private val width = 1920 // Image width
-    private val height = 1080 // Image height
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     private lateinit var youtubeApi: YouTube
 
     private var rtmpClient: RtmpClient? = null
     private var videoEncoder: VideoEncoder? = null
     private var audioEncoder: AudioEncoder? = null
-    private var liveBroadcast: LiveBroadcast? = null
+    private var currentBroadcastId: String? = null
     private var streamedBitmap: Bitmap? = null
     private var videoJob: Job? = null
     private var audioJob: Job? = null
     private var broadcastStatusJob: Job? = null
-
 
     override fun init(accessToken: GoogleApiAccessToken) {
         youtubeApi = YouTube.Builder(
@@ -75,10 +79,8 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
         ).setApplicationName("SimpleStreaming").build()
     }
 
-    private suspend fun prepareYouTube(): String {
-        Log.d("YTLiveStreamingApi", "prepareYouTube is called.")
-
-        // Insert the LiveBroadcast
+    private suspend fun createLive(): String {
+        // Create LiveBroadcast
         val liveBroadcastInsert = youtubeApi.liveBroadcasts().insert(
             listOf("snippet", "status", "contentDetails"),
             LiveBroadcast().apply {
@@ -92,15 +94,17 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
                     selfDeclaredMadeForKids = false
                 }
                 contentDetails = LiveBroadcastContentDetails().apply {
-                    enableAutoStart = true
                     enableAutoStop = true
                 }
             }
         )
-        liveBroadcast = withContext(Dispatchers.IO) { liveBroadcastInsert.execute() }
-        Log.d("YTLiveStreamingApi", "Broadcast info: $liveBroadcast.")
+        val broadcast = withContext(Dispatchers.IO) { liveBroadcastInsert.execute() }
+        Log.d("YTLiveStreamingApi", "Broadcast info: $currentBroadcastId.")
 
-        // Insert the LiveStream
+        // Update the broadcast ID
+        currentBroadcastId = broadcast.id
+
+        // Create LiveStream
         val liveStreamInsert = youtubeApi.liveStreams().insert(
             listOf("snippet", "cdn"),
             LiveStream().apply {
@@ -120,7 +124,7 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
 
         // Bind the broadcast to the stream
         val liveBroadcastBind = youtubeApi.liveBroadcasts().bind(
-            liveBroadcast?.id,
+            currentBroadcastId,
             listOf("id", "contentDetails"),
         ).apply { streamId = liveStream.id }
         val boundBroadcast = withContext(Dispatchers.IO) { liveBroadcastBind.execute() }
@@ -132,10 +136,7 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
         return "$rtmpUrl/$streamName"
     }
 
-    override suspend fun createBroadcast() {
-        val streamUrl = prepareYouTube()
-        Log.d("YTLiveStreamingApi", "RTMP URL: $streamUrl.")
-
+    private fun setupRtmpClient(streamUrl: String) {
         val connectChecker = object : ConnectCheckerRtmp {
             override fun onAuthErrorRtmp() {
                 Log.d("YTLiveStreamingApi", "auth error")
@@ -170,7 +171,9 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
         rtmpClient = RtmpClient(connectChecker)
         rtmpClient?.setReTries(10)
         rtmpClient?.connect(streamUrl)
+    }
 
+    private fun startVideoEncoder() {
         videoEncoder = VideoEncoder(object : GetVideoData {
             override fun onSpsPpsVps(sps: ByteBuffer, pps: ByteBuffer, vps: ByteBuffer?) {
                 rtmpClient?.setVideoInfo(sps, pps, vps)
@@ -200,20 +203,8 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
             5,
             FormatVideoEncoder.SURFACE
         )
-        val surface = videoEncoder?.inputSurface // MediaCodecのinput surfaceを取得します
+        val surface = videoEncoder?.inputSurface // get the input surface of MediaCodec
         videoEncoder?.start()
-
-        audioEncoder = AudioEncoder(object : GetAacData {
-            override fun getAacData(aacBuffer: ByteBuffer, info: MediaCodec.BufferInfo) {
-                rtmpClient?.sendAudio(aacBuffer, info)
-            }
-
-            override fun onAudioFormat(mediaFormat: android.media.MediaFormat) {
-                // NOP
-            }
-        })
-        audioEncoder?.prepareAudioEncoder(128 * 1024, 44100, false, 0)
-        audioEncoder?.start()
 
         // Stream bitmap forever
         videoJob?.cancel()
@@ -232,7 +223,27 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
                     delay(1000L / 60L) // Frame rate 60 fps
                 }
             }
+        }.also {
+            it.invokeOnCompletion {
+                streamedBitmap?.recycle()
+                streamedBitmap = null
+            }
         }
+    }
+
+    private fun startAudioEncoder() {
+        audioEncoder = AudioEncoder(object : GetAacData {
+            override fun getAacData(aacBuffer: ByteBuffer, info: MediaCodec.BufferInfo) {
+                rtmpClient?.sendAudio(aacBuffer, info)
+            }
+
+            override fun onAudioFormat(mediaFormat: android.media.MediaFormat) {
+                // NOP
+            }
+        })
+        audioEncoder?.prepareAudioEncoder(128 * 1024, 44100, false, 0)
+        audioEncoder?.start()
+
 
         // Stream silent audio forever
         audioJob?.cancel()
@@ -260,12 +271,14 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
                 delay(1000L) // send 1 time per second
             }
         }
+    }
 
+    private fun startStateMonitoringToGoLive() {
         broadcastStatusJob?.cancel()
         broadcastStatusJob = null
         broadcastStatusJob = scope.launch {
             fun transitionStatus(next: String) {
-                youtubeApi.liveBroadcasts().transition(next, liveBroadcast?.id, listOf("snippet", "status")).execute()
+                youtubeApi.liveBroadcasts().transition(next, currentBroadcastId, listOf("snippet", "status")).execute()
             }
 
             var status: String? = null
@@ -275,7 +288,7 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
                 try {
                     // ライブ配信の情報を取得
                     val liveBroadcastList = youtubeApi.liveBroadcasts().list(listOf("snippet", "status"))
-                        .setId(listOf(liveBroadcast?.id))
+                        .setId(listOf(currentBroadcastId))
                         .execute()
                     status = liveBroadcastList.items.firstOrNull()?.status?.lifeCycleStatus
                     Log.d("YTLiveStreamingApi_test", "liveBroadcastList -> ${liveBroadcastList.items}")
@@ -297,12 +310,18 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun updateStreamingText(text: String) {
-        updateStreamImage(text)
+    override suspend fun startStreaming() {
+        val streamUrl = createLive()
+        Log.d("YTLiveStreamingApi", "RTMP URL: $streamUrl.")
+
+        setupRtmpClient(streamUrl)
+        startVideoEncoder()
+        startAudioEncoder()
+        startStateMonitoringToGoLive()
     }
 
-    override suspend fun startStreaming() {
-        TODO("Not yet implemented")
+    override suspend fun updateStreamingText(text: String) {
+        updateStreamImage(text)
     }
 
     override suspend fun stopStreaming() {
@@ -310,24 +329,22 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
             // Change status to "complete" if possible
             broadcastStatusJob?.cancel()
             broadcastStatusJob = null
-            liveBroadcast?.let { broadcast ->
+            currentBroadcastId?.let { id ->
                 val liveBroadcastList = youtubeApi.liveBroadcasts().list(listOf("snippet", "status"))
-                    .setId(listOf(broadcast.id))
+                    .setId(listOf(id))
                     .execute()
                 val status = liveBroadcastList.items.firstOrNull()?.status?.lifeCycleStatus
                 if (status == "live") {
-                    youtubeApi.liveBroadcasts().transition("complete", broadcast.id, listOf("snippet", "status")).execute()
+                    youtubeApi.liveBroadcasts().transition("complete", id, listOf("snippet", "status")).execute()
                 }
             }
-            liveBroadcast = null
+            currentBroadcastId = null
 
             // Stop video streaming
             videoJob?.cancel()
             videoJob = null
             videoEncoder?.stop()
             videoEncoder = null
-            streamedBitmap?.recycle()
-            streamedBitmap = null
 
             // Stop audio streaming
             audioJob?.cancel()
@@ -344,23 +361,23 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
 
     private suspend fun updateStreamImage(text: String) {
         withContext(coroutineContext) {
-            val bm = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            val bm = Bitmap.createBitmap(IMAGE_WIDTH, IMAGE_HEIGHT, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(bm)
             val paint = Paint()
 
-            val strokeWidth = 5f  // 枠線の太さを設定
-            paint.color = Color.WHITE  // 枠線の色を設定
-            paint.style = Paint.Style.STROKE  // 描画モードをSTROKEに設定して、塗りつぶしをしないようにする
-            paint.strokeWidth = strokeWidth  // 枠線の太さを設定
-            canvas.drawRect(strokeWidth/2, strokeWidth/2, width - strokeWidth/2, height - strokeWidth/2, paint)  // 枠線を描画
+            val strokeWidth = 5f
+            paint.color = Color.WHITE  // Color for the frame
+            paint.style = Paint.Style.STROKE  // Set the drawing mode to STROKE to avoid filling
+            paint.strokeWidth = strokeWidth
+            canvas.drawRect(strokeWidth / 2, strokeWidth / 2, IMAGE_WIDTH - strokeWidth / 2, IMAGE_HEIGHT - strokeWidth / 2, paint)  // 枠線を描画
 
-            paint.color = Color.WHITE  // テキストの色を設定
-            paint.style = Paint.Style.FILL  // 描画モードをFILLに変更してテキストを塗りつぶし
+            paint.color = Color.WHITE  // Text color
+            paint.style = Paint.Style.FILL  // Change drawing mode to FILL and fill text
             paint.textSize = 100f
             val bounds = Rect()
             paint.getTextBounds(text, 0, text.length, bounds)
-            val x = (width - bounds.width()) / 2.0f
-            val y = (height + bounds.height()) / 2.0f
+            val x = (IMAGE_WIDTH - bounds.width()) / 2.0f
+            val y = (IMAGE_HEIGHT + bounds.height()) / 2.0f
             canvas.drawText(text, x, y, paint)
 
             streamedBitmap = bm

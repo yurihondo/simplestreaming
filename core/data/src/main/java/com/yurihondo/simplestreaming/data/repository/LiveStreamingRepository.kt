@@ -9,8 +9,8 @@ interface LiveStreamingRepository {
 
     fun init(accessToken: GoogleApiAccessToken)
 
-    suspend fun createBroadcast()
     suspend fun startStreaming()
+
     suspend fun stopStreaming()
 
     suspend fun updateStreamingText(text: String)

@@ -14,6 +14,6 @@ class StartTextLiveStreamingUseCase @Inject constructor(
         check(token.isValid()) { "User is not logged in" }
         liveStreamingRepository.init(token)
         liveStreamingRepository.updateStreamingText(initText)
-        liveStreamingRepository.createBroadcast()
+        liveStreamingRepository.startStreaming()
     }
 }
