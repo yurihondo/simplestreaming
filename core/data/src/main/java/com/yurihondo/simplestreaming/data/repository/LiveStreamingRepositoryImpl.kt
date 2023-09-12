@@ -83,15 +83,16 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
             listOf("snippet", "status", "contentDetails"),
             LiveBroadcast().apply {
                 snippet = LiveBroadcastSnippet().apply {
-                    title = "Test Broadcast"
+                    title = "Simple Streaming"
                     scheduledStartTime = DateTime(System.currentTimeMillis())
-                    description = "This is a test broadcast"
+                    description = "Streaming from Simple Streaming App"
                 }
                 status = LiveBroadcastStatus().apply {
-                    privacyStatus = "unlisted"
+                    privacyStatus = "public"
                     selfDeclaredMadeForKids = false
                 }
                 contentDetails = LiveBroadcastContentDetails().apply {
+                    enableAutoStart = true
                     enableAutoStop = true
                 }
             }
@@ -104,7 +105,7 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
             listOf("snippet", "cdn"),
             LiveStream().apply {
                 snippet = LiveStreamSnippet().apply {
-                    title = "Test Stream"
+                    title = "Stream for Simple Streaming"
                 }
                 cdn = CdnSettings().apply {
                     format = "1080p"
@@ -167,6 +168,8 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
             }
         }
         rtmpClient = RtmpClient(connectChecker)
+        rtmpClient?.setReTries(10)
+        rtmpClient?.connect(streamUrl)
 
         videoEncoder = VideoEncoder(object : GetVideoData {
             override fun onSpsPpsVps(sps: ByteBuffer, pps: ByteBuffer, vps: ByteBuffer?) {
@@ -199,8 +202,6 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
         )
         val surface = videoEncoder?.inputSurface // MediaCodecのinput surfaceを取得します
         videoEncoder?.start()
-        rtmpClient?.setReTries(10)
-        rtmpClient?.connect(streamUrl)
 
         audioEncoder = AudioEncoder(object : GetAacData {
             override fun getAacData(aacBuffer: ByteBuffer, info: MediaCodec.BufferInfo) {
@@ -277,12 +278,13 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
                         .setId(listOf(liveBroadcast?.id))
                         .execute()
                     status = liveBroadcastList.items.firstOrNull()?.status?.lifeCycleStatus
+                    Log.d("YTLiveStreamingApi_test", "liveBroadcastList -> ${liveBroadcastList.items}")
 
                     // ライブ配信が存在し、かつ状態が "ready" > "testing" > "live"へ変更
                     when (status) {
                         "ready" -> transitionStatus("testing")
                         "testing" -> transitionStatus("live")
-                        "live" -> return@repeat
+                        "live" -> return@launch
                     }
                 } catch (e: GoogleJsonResponseException) {
                     Log.e("YTLiveStreamingApi", "Error while monitoring broadcast status: ${e.message}", e)
