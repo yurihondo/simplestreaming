@@ -22,11 +22,11 @@ dependencies {
 
     // Google API
     implementation("com.google.api-client:google-api-client-gson:2.2.0")
-    implementation("com.google.apis:google-api-services-youtube:v3-rev20230807-2.0.0") {
+    implementation("com.google.apis:google-api-services-youtube:v3-rev20230904-2.0.0") {
         exclude(group = "org.apache.httpcomponents")
     }
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
