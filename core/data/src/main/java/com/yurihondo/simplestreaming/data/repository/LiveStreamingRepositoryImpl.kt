@@ -234,6 +234,10 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
     private fun startAudioEncoder() {
         audioEncoder = AudioEncoder(object : GetAacData {
             override fun getAacData(aacBuffer: ByteBuffer, info: MediaCodec.BufferInfo) {
+                Log.d(
+                    "YTLiveStreamingApi",
+                    "getAacData is called, info: presentationTimeUs = ${info.presentationTimeUs}, offset = ${info.offset}, size = ${info.size}, flags = ${info.flags}"
+                )
                 rtmpClient?.sendAudio(aacBuffer, info)
             }
 
@@ -266,7 +270,7 @@ internal class LiveStreamingRepositoryImpl @Inject constructor(
 
             // send silence data to the encoder.
             while (isActive) {
-                audioEncoder?.inputPCMData(Frame(buffer.array(), 0, bufferSize))
+                audioEncoder?.inputPCMData(Frame(buffer.array(), 0, bufferSize, System.nanoTime() / 1000))
                 buffer.position(0) // rewind the buffer
                 delay(1000L) // send 1 time per second
             }

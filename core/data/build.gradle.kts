@@ -29,7 +29,7 @@ dependencies {
     // DataStore
     implementation(libs.dataStore)
 
-    implementation("com.github.pedroSG94.rtmp-rtsp-stream-client-java:rtplibrary:2.2.6")
+    implementation("com.github.pedroSG94.RootEncoder:library:2.3.1")
 
     // Test
     testImplementation(libs.junit)
