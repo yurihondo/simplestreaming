@@ -1,39 +1,26 @@
-name: Manage Renovate pull requests
-
-on:
-  workflow_dispatch:
-    inputs:
-      job_name:
-        description: 'A job name'
-        required: true
-        type: choice
-        options:
-          - execute-renovate
-
-run-name: "Manage Renovate PRs by ${{ github.actor }} - ${{ github.event_name }}"
-
-permissions: {}
-
+name: Renovate
+on: workflow_dispatch
 jobs:
-  # Test job for renovate configurations.
-  # You have to set your PAT to secrets.
-  execute-renovate:
-    if: >
-      inputs.job_name == 'execute-renovate'
-
-    timeout-minutes: 5
-
-    permissions:
-      contents: read
-
+  renovate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
-      - name: Self-hosted Renovate
-        uses: renovatebot/github-action@3cef36a9aba515d8726b491905b3bc766832e221 # v39.0.5
+      - name: Get token
+        id: get_token
+        uses: tibdex/github-app-token@v2.1.0
         with:
-          configurationFile: renovate.json5
-          token: ${{ secrets.RENOVATE_TEST_TOKEN }} # workflow, repo, read user:email permissions
+          private_key: ${{ secrets.PRIVATE_KEY }}
+          app_id: ${{ secrets.APP_ID }}
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Self-hosted Renovate
+        uses: renovatebot/github-action@v39.1.3
+        with:
+          configurationFile: .github/renovate.json
+          token: 'x-access-token:${{ steps.get_token.outputs.token }}'
         env:
           LOG_LEVEL: 'debug'
-          RENOVATE_REPOSITORIES: ${{ github.repository }}
+          RENOVATE_USERNAME: ${{ vars.RENOVATE_USERNAME }}
+          RENOVATE_GIT_AUTHOR: ${{ vars.RENOVATE_GIT_AUTHOR }}
+          RENOVATE_REPOSITORIES: ${{ vars.RENOVATE_REPOSITORIES }}
