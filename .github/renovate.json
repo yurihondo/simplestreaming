@@ -1,0 +1,13 @@
+{
+  "extends": ["config:base","github>whitesource/merge-confidence:beta"],
+  "ignorePresets": [":prHourlyLimit2", ":prConcurrentLimit10"],
+  "major": {
+    "stabilityDays": 7
+  },
+  "minor": {
+    "stabilityDays": 3
+  },
+  "patch": {
+    "stabilityDays": 2
+  }
+}
