@@ -1,7 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:base"
+    "config:base",
+    "github>whitesource/merge-confidence:beta"
   ],
   "timezone": "Asia/Tokyo",
 
@@ -44,14 +45,12 @@
   "osvVulnerabilityAlerts": true,
 
   "major": {
-    "minimumReleaseAge": "1 days"
+    "stabilityDays": 7
   },
-
   "minor": {
-    "minimumReleaseAge": "1 days"
+    "stabilityDays": 3
   },
-
   "patch": {
-    "minimumReleaseAge": "1 days"
+    "stabilityDays": 2
   }
 }
