@@ -5,18 +5,16 @@
   ],
   "timezone": "Asia/Tokyo",
 
-  // For PRs
-  "prHourlyLimit": 0, // 0 means no limit
+  "prHourlyLimit": 0,
   "prConcurrentLimit": 5,
   "commitMessagePrefix": "chore: ",
   "pruneBranchAfterAutomerge": true,
   "pruneStaleBranches": true,
   "labels": ["renovate"],
-  reviewers: ["yurihondo"],
-  "automergeStrategy": "merge-commit",  // This setting does not work for manual merges.
+  "reviewers": ["yurihondo"],
+  "automergeStrategy": "merge-commit",
 
   "packageRules": [
-    // Group dependencies
     {
       "matchPackagePrefixes": [
         "androidx.compose.compiler",
@@ -26,7 +24,6 @@
       "groupSlug": "compose_compiler_and_kotlin"
     },
 
-    // Auto marge
     {
       "matchUpdateTypes": [
         "minor",
@@ -34,7 +31,7 @@
       ],
       "matchCurrentVersion": "!/^0/",
       "automerge": true
-    },
+    }
   ],
 
   "vulnerabilityAlerts": {
@@ -44,14 +41,12 @@
   "osvVulnerabilityAlerts": true,
 
   "major": {
-    "minimumReleaseAge": "1 days"
+    "stabilityDays": 7
   },
-
   "minor": {
-    "minimumReleaseAge": "1 days"
+    "stabilityDays": 3
   },
-
   "patch": {
-    "minimumReleaseAge": "1 days"
+    "stabilityDays": 2
   }
 }
