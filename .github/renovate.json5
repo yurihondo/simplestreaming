@@ -4,12 +4,11 @@
     "config:base",
     "github>whitesource/merge-confidence:beta"
   ],
-  "ignorePresets": [":prHourlyLimit2", ":prConcurrentLimit10"],
   "timezone": "Asia/Tokyo",
 
   // For PRs
   "prHourlyLimit": 0, // 0 means no limit
-  "prConcurrentLimit": 5,
+  "prConcurrentLimit": 0, // 0 means no limit
   "commitMessagePrefix": "chore: ",
   "pruneBranchAfterAutomerge": true,
   "pruneStaleBranches": true,
@@ -46,12 +45,12 @@
   "osvVulnerabilityAlerts": true,
 
   "major": {
-    "stabilityDays": 0
+    "stabilityDays": 7
   },
   "minor": {
-    "stabilityDays": 0
+    "stabilityDays": 3
   },
   "patch": {
-    "stabilityDays": 0
+    "stabilityDays": 2
   }
 }
