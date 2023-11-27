@@ -25,7 +25,7 @@ fun Project.configureAndroid() {
         namespace?.let {
             this.namespace = it
         }
-        compileSdkVersion(33)
+        compileSdkVersion(34)
 
         defaultConfig {
             minSdk = 33
@@ -45,6 +45,6 @@ fun Project.configureAndroid() {
             }
         }
 
-        defaultConfig.targetSdk = 33
+        defaultConfig.targetSdk = 34
     }
 }
