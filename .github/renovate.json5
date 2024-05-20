@@ -13,10 +13,19 @@
   "pruneBranchAfterAutomerge": true,
   "pruneStaleBranches": true,
   "labels": ["renovate"],
-  reviewers: ["yurihondo"],
+  "reviewers": ["yurihondo"],
   "automergeStrategy": "merge-commit",  // This setting does not work for manual merges.
 
   "packageRules": [
+    // Ignore specific packages
+    {
+      "matchPackageNames": [
+        "androidx.lifecycle:lifecycle-runtime-ktx",
+        "androidx.lifecycle:lifecycle-runtime-compose"
+      ],
+      "enabled": false
+    },
+
     // Group dependencies
     {
       "matchPackagePrefixes": [
@@ -35,7 +44,7 @@
       ],
       "matchCurrentVersion": "!/^0/",
       "automerge": true
-    },
+    }
   ],
 
   "vulnerabilityAlerts": {
