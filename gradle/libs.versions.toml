@@ -2,31 +2,37 @@
 # Be sure to use compatible version that is supported by compose compiler
 # https://developer.android.com/jetpack/androidx/releases/compose-kotlin#pre-release_kotlin_compatibility
 kotlin = "1.9.10"
-kotlinxCoroutines = "1.7.3"
+kotlinxCoroutines = "1.8.1"
 composeCompiler = "1.5.3"
 
 # https://developer.android.com/jetpack/compose/bom/bom-mapping
-composeBom = "2023.10.01"
-core = "1.10.1"
+composeBom = "2024.05.00"
+core = "1.13.1"
 lifecycle = "2.6.2"
-activity = "1.7.2"
+activity = "1.9.0"
 junit = "4.13.2"
 androidxJunit = "1.1.5"
 espresso = "3.5.1"
+<<<<<<< renovate/navigation
 navigation = "2.7.7"
 composeHiltNavigatiaon = "1.0.0"
 dagger = "2.48.1"
+=======
+navigation = "2.7.5"
+composeHiltNavigatiaon = "1.2.0"
+dagger = "2.51.1"
+>>>>>>> main
 appauth = "0.11.1"
 androidDesugarJdkLibs = "2.0.4"
 androidGradlePlugin = "8.1.1"
 gradleVersionsPlugin = "0.47.0"
-littleRobotsVersionCatalog = "0.8.1"
+littleRobotsVersionCatalog = "0.8.4"
 ossLicenses = "0.10.6"
 playServicesOssLicenses = "17.0.1"
 gson = "2.2.0"
 youtube = "v3-rev20230904-2.0.0"
 dataStore = "1.0.0"
-tink = "1.10.0"
+tink = "1.13.0"
 
 [libraries]
 # Plugins
