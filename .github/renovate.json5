@@ -18,13 +18,13 @@
 
   "packageRules": [
     // Ignore specific packages
-    {
-      "matchPackagePrefixes": [
-        "androidx.lifecycle:",
-        "com.google.apis:google-"
-      ],
-      "enabled": false
-    },
+//    {
+//      "matchPackagePrefixes": [
+//        "androidx.lifecycle:",
+//        "com.google.apis:google-"
+//      ],
+//      "enabled": false
+//    },
 
     // Group dependencies
     {
