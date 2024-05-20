@@ -17,10 +17,11 @@
   "automergeStrategy": "merge-commit",  // This setting does not work for manual merges.
 
   "packageRules": [
-    // Ignore packages with the prefix "androidx.lifecycle:"
+    // Ignore specific packages
     {
       "matchPackagePrefixes": [
-        "androidx.lifecycle:"
+        "androidx.lifecycle:",
+        "com.google.apis:"
       ],
       "enabled": false
     },
