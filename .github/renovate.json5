@@ -17,11 +17,10 @@
   "automergeStrategy": "merge-commit",  // This setting does not work for manual merges.
 
   "packageRules": [
-    // Ignore specific packages
+    // Ignore packages with the prefix "androidx.lifecycle:"
     {
-      "matchPackageNames": [
-        "androidx.lifecycle:lifecycle-runtime-ktx",
-        "androidx.lifecycle:lifecycle-runtime-compose"
+      "matchPackagePrefixes": [
+        "androidx.lifecycle:"
       ],
       "enabled": false
     },
@@ -36,7 +35,7 @@
       "groupSlug": "compose_compiler_and_kotlin"
     },
 
-    // Auto marge
+    // Auto merge
     {
       "matchUpdateTypes": [
         "minor",
