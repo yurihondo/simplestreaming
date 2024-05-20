@@ -21,7 +21,7 @@
     {
       "matchPackagePrefixes": [
         "androidx.lifecycle:",
-        "com.google.apis:"
+        "com.google.apis:google-"
       ],
       "enabled": false
     },
