@@ -24,7 +24,7 @@ littleRobotsVersionCatalog = "0.8.4"
 ossLicenses = "0.10.6"
 playServicesOssLicenses = "17.0.1"
 gson = "2.2.0"
-youtube = "v3-rev20230904-2.0.0"
+youtube = "v3-rev20240514-2.0.0"
 dataStore = "1.0.0"
 tink = "1.13.0"
 
