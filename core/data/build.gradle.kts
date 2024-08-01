@@ -29,7 +29,7 @@ dependencies {
     // DataStore
     implementation(libs.dataStore)
 
-    implementation("com.github.pedroSG94.RootEncoder:library:2.3.1")
+    implementation("com.github.pedroSG94.RootEncoder:library:2.4.5")
 
     // Test
     testImplementation(libs.junit)
